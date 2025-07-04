@@ -1,0 +1,4 @@
+2025-07-03 17:20:06,333 - __main__ - INFO - Successfully logged in to Zerodha
+2025-07-03 17:20:06,576 - __main__ - INFO - Fetching data for RELIANCE...
+2025-07-03 17:20:06,823 - __main__ - INFO - Fetched 1361 candles for RELIANCE
+2025-07-03 17:20:06,999 - __main__ - INFO - Saved historical data to d:\Data\ZerodhaSwing\newrepo\HistoricalData\historical_data_20250703.csv
