@@ -1,76 +1,215 @@
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, Request, HTTPException, Query, Form
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi import status
+from contextlib import asynccontextmanager
+from pydantic import BaseModel
 import json
 import logging
+import os
+import asyncio
+import threading
+from datetime import datetime, timedelta
 from orders import place_order, get_top_3_futures_from_tv_symbol
-import config
 from utils import zerodha_login
+from dotenv import load_dotenv
+import smtplib
+from email.message import EmailMessage
 
-app = Flask(__name__)
-logging.basicConfig(level=logging.INFO)
+# File lock for cache updates
+active_contracts_lock = threading.Lock()
 
-# Initialize Zerodha Connection
+# Load environment variables
+load_dotenv()
+
+# File paths and secrets from env
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
+REQUEST_TOKEN_FILE = os.getenv("REQUEST_TOKEN_PATH", "request_token.txt")
+ACCESS_TOKEN_FILE = os.getenv("ACCESS_TOKEN_PATH", "access_token.txt")
+ACTIVE_CONTRACTS_FILE = os.getenv("ACTIVE_CONTRACTS_PATH", "cache/active_contracts.json")
+SYMBOLS_CACHE_FILE = os.getenv("SYMBOLS_CACHE_PATH", "cache/symbols_cache.json")
+API_SECRET = os.getenv("KITE_API_SECRET")
+API_KEY = os.getenv("KITE_API_KEY")
+EMAIL_SENDER = os.getenv("EMAIL_SENDER")
+EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+
 kite = zerodha_login()
 
-@app.route('/webhook', methods=['POST'])
-def webhook():
+class WebhookPayload(BaseModel):
+    action: str
+    symbol: str
+    segment: str = "NSE"
+    price: float = 0.0
+    time: str = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan event for FastAPI app. Starts the rollover background task."""
+    async def rollover_check():
+        while True:
+            try:
+                today = datetime.now().date()
+                # Ensure contracts file exists
+                if not os.path.exists(ACTIVE_CONTRACTS_FILE):
+                    os.makedirs(os.path.dirname(ACTIVE_CONTRACTS_FILE), exist_ok=True)
+                    with open(ACTIVE_CONTRACTS_FILE, "w") as f:
+                        json.dump({}, f)
+                with active_contracts_lock:
+                    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
+                        active_map = json.load(f)
+                positions = kite.positions()["net"]
+                for sym in list(active_map):
+                    contracts = get_top_3_futures_from_tv_symbol(sym + "!", kite)
+                    if len(contracts) < 2:
+                        continue
+                    current_contract = contracts[0]
+                    next_contract = contracts[1]
+                    expiry = current_contract['expiry']
+                    if isinstance(expiry, str):
+                        expiry = datetime.strptime(expiry, "%Y-%m-%d").date()
+                    days_left = (expiry - today).days
+                    if 0 < days_left <= 7 and today.weekday() < 5:
+                        current_symbol = current_contract['tradingsymbol']
+                        next_symbol = next_contract['tradingsymbol']
+                        existing_position = next(
+                            (p for p in positions if p["tradingsymbol"] == current_symbol and p["exchange"] == "NFO"),
+                            None
+                        )
+                        qty_held = existing_position["quantity"] if existing_position else 0
+                        if qty_held > 0:
+                            place_order(kite, current_symbol, "sell", 0, "NFO", quantity=qty_held)
+                            place_order(kite, next_symbol, "buy", 0, "NFO", quantity=qty_held)
+                            active_map[sym.upper()] = next_symbol
+                            logging.info(f"✅ Rolled over {sym} from {current_symbol} to {next_symbol}")
+                with active_contracts_lock:
+                    with open(ACTIVE_CONTRACTS_FILE, "w") as f:
+                        json.dump(active_map, f)
+                logging.info("Active contracts updated during rollover check.")
+            except Exception as e:
+                logging.exception("Rollover scheduler failed")
+            await asyncio.sleep(24 * 60 * 60)
+    asyncio.create_task(rollover_check())
+    yield
+
+app = FastAPI(lifespan=lifespan)
+logging.basicConfig(level=logging.INFO)
+
+@app.get("/token", response_class=HTMLResponse)
+def token_form() -> HTMLResponse:
+    """Render the Zerodha login form."""
     try:
-        # Validate Secret Token
-        token = request.args.get('token')
-        if token != config.WEBHOOK_SECRET:
-            logging.warning("Unauthorized access attempt.")
-            return jsonify({"status": "unauthorized"}), 401
+        login_url = kite.login_url()
+        return HTMLResponse(content=f"""
+        <html>
+            <body>
+                <p>1. Click the link below to login to Zerodha and get your <b>request_token</b>:</p>
+                <a href="{login_url}" target="_blank">{login_url}</a>
+                <p>2. Paste the request_token below:</p>
+                <form method="post">
+                  <input type="text" name="token" size="50"/><br><br>
+                  <input type="submit" value="Submit"/>
+                </form>
+            </body>
+        </html>
+        """, status_code=200)
+    except Exception as e:
+        logging.exception("Failed to generate login URL")
+        return HTMLResponse(content=f"<p>Error: {str(e)}</p>", status_code=500)
 
-        data = request.get_json()
-        logging.info(f"Received Webhook: {json.dumps(data)}")
+@app.post("/token")
+def save_and_refresh_token(token: str = Form(...)) -> JSONResponse:
+    """Save and refresh Zerodha access token."""
+    try:
+        access_token = kite.generate_session(token, api_secret=API_SECRET)["access_token"]
+        with open(ACCESS_TOKEN_FILE, "w") as f:
+            f.write(access_token)
+        logging.info("Access token generated and saved successfully.")
+        return JSONResponse(content={"status": "Access token generated"}, status_code=200)
+    except Exception as e:
+        logging.exception("Failed to save and refresh token")
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
-        # Extract required fields
-        action = data.get("action")
-        tv_symbol = data.get("symbol")
-        segment = data.get("segment", "NSE")  # Default to NSE if not provided
-        price = float(data.get("price", 0))
-        time_received = data.get("time")
+    """Thread-safe update of the active contracts file."""
+    try:
+        with active_contracts_lock:
+            if not os.path.exists(ACTIVE_CONTRACTS_FILE):
+                os.makedirs(os.path.dirname(ACTIVE_CONTRACTS_FILE), exist_ok=True)
+                with open(ACTIVE_CONTRACTS_FILE, "w") as f:
+                    json.dump({}, f)
+            with open(ACTIVE_CONTRACTS_FILE, "r") as f:
+                active_map = json.load(f)
+            active_map[active_symbol.upper()] = tradingsymbol
+            with open(ACTIVE_CONTRACTS_FILE, "w") as f:
+                json.dump(active_map, f)
+            logging.info(f"Updated active contract for {active_symbol} to {tradingsymbol}")
+    except Exception as e:
+        logging.error(f"Failed to update active contracts: {e}")
 
+@app.post("/webhook", response_model=None)
+async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONResponse:
+    """Webhook endpoint for trading signals."""
+    if token != WEBHOOK_SECRET:
+        logging.warning("Unauthorized access attempt.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+    try:
+        logging.info(f"Received Webhook: {payload.json()}")
+        action = payload.action
+        tv_symbol = payload.symbol
+        segment = payload.segment
+        price = payload.price
+        time_received = payload.time
         if action not in ["buy", "sell"]:
             logging.error(f"Invalid action received: {action}")
-            return jsonify({"status": "invalid action"}), 400
-
-        # Get instrument symbol based on segment
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid action")
+        # Rollover logic
         if segment == "NFO":
-            symbol_info = get_top_3_futures_from_tv_symbol(tv_symbol)[0]
-            tradingsymbol = symbol_info['tradingsymbol']
+            active_symbol = tv_symbol[:-1] if tv_symbol.endswith("!") else tv_symbol
+            try:
+                with active_contracts_lock:
+                    if not os.path.exists(ACTIVE_CONTRACTS_FILE):
+                        os.makedirs(os.path.dirname(ACTIVE_CONTRACTS_FILE), exist_ok=True)
+                        with open(ACTIVE_CONTRACTS_FILE, "w") as f:
+                            json.dump({}, f)
+                    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
+                        active_map = json.load(f)
+                tradingsymbol = active_map.get(active_symbol.upper())
+                if not tradingsymbol:
+                    contracts = get_top_3_futures_from_tv_symbol(tv_symbol, kite)
+                    if not contracts:
+                        raise HTTPException(status_code=404, detail=f"No futures contracts found for {tv_symbol}")
+                    tradingsymbol = contracts[0]['tradingsymbol']
+            except Exception as e:
+                logging.error(f"Error fetching active contract: {e}")
+                raise HTTPException(status_code=500, detail=f"Error fetching active contract: {e}")
         else:
-            tradingsymbol = tv_symbol  # For NSE equity, TradingView symbol works as-is
-
-        # Fetch current positions
-        positions = kite.positions()["net"]
-        existing_position = next(
-            (p for p in positions if p["tradingsymbol"] == tradingsymbol and p["exchange"] == segment),
-            None
-        )
-
+            tradingsymbol = tv_symbol
+        try:
+            positions = kite.positions()["net"]
+        except Exception as e:
+            logging.error(f"Error fetching positions: {e}")
+            raise HTTPException(status_code=500, detail=f"Error fetching positions: {e}")
+        existing_position = next((p for p in positions if p["tradingsymbol"] == tradingsymbol and p["exchange"] == segment), None)
         qty_held = existing_position["quantity"] if existing_position else 0
-
-        # Handle Buy
         if action == "buy":
             if qty_held > 0:
-                logging.info(f"Already holding position for {tradingsymbol}. Skipping buy order.")
-                return jsonify({"status": "already holding position, buy skipped"}), 200
+                logging.info(f"Already holding {tradingsymbol}. Skipping buy.")
+                return JSONResponse(content={"status": "already holding, buy skipped"}, status_code=200)
             else:
-                order_id = place_order(tradingsymbol, action, price, segment)
-                return jsonify({"status": "buy order placed", "order_id": order_id}), 200
-
-        # Handle Sell
+                order_id = place_order(kite, tradingsymbol, action, price, segment)
+                if order_id and segment == "NFO":
+                    update_active_contract(active_symbol, tradingsymbol)
+                return JSONResponse(content={"status": "buy order placed", "order_id": order_id}, status_code=200)
         elif action == "sell":
             if qty_held <= 0:
-                logging.info(f"No holdings for {tradingsymbol}. Skipping sell order to avoid short selling.")
-                return jsonify({"status": "no holdings, sell skipped"}), 200
+                logging.info(f"No holdings for {tradingsymbol}. Skipping sell.")
+                return JSONResponse(content={"status": "no holdings, sell skipped"}, status_code=200)
             else:
-                order_id = place_order(tradingsymbol, action, price, segment)
-                return jsonify({"status": "sell order placed", "order_id": order_id}), 200
-
+                order_id = place_order(kite, tradingsymbol, action, price, segment)
+                if order_id and segment == "NFO":
+                    update_active_contract(active_symbol, tradingsymbol)
+                return JSONResponse(content={"status": "sell order placed", "order_id": order_id}, status_code=200)
+    except HTTPException as he:
+        raise he
     except Exception as e:
         logging.exception("Error processing webhook.")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000)
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})

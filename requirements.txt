@@ -1,2 +1,6 @@
-flask
+fastapi
+uvicorn[standard]
+pandas
+python-dotenv
 kiteconnect
+python-multipart

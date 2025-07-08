@@ -1,14 +1,15 @@
-from kiteconnect import KiteConnect
+import os
 import logging
-import config
 import pandas as pd
-import os, sys
-import datetime
-import logging
-import time
-from utils import zerodha_login
-# Import ProStocks API related modules
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from kiteconnect import KiteConnect
+from dotenv import load_dotenv
+from typing import List, Dict, Any, Optional
+
+# Load environment variables
+load_dotenv()
+API_KEY = os.getenv("KITE_API_KEY")
+API_SECRET = os.getenv("KITE_API_SECRET")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -19,42 +20,28 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
-kite = zerodha_login()
 
-def get_top_3_futures_from_tv_symbol(tv_symbol, exchange="NFO"):
+def get_top_3_futures_from_tv_symbol(tv_symbol: str, kite: KiteConnect, exchange: str = "NFO") -> List[Dict[str, Any]]:
     """
-    Handles TradingView symbol like 'RELIANCE!' and returns top 3 NSE futures contracts.
-
+    Retrieve the top 3 nearest expiry futures contracts for a given symbol from TradingView notation.
     Args:
-        tv_symbol (str): TradingView symbol, e.g., 'RELIANCE!' or 'RELIANCE'
-        exchange (str): Exchange, default is 'NSE'
-
+        tv_symbol (str): TradingView symbol, e.g. 'RELIANCE!'
+        kite (KiteConnect): KiteConnect API instance
+        exchange (str): Exchange, default 'NFO'
     Returns:
-        list of dict: List of futures contracts with tradingsymbol, expiry, lot_size
+        List of dicts with 'tradingsymbol', 'expiry', 'lot_size'.
+    Raises:
+        Exception: If fetching instruments fails.
     """
-    # Clean TradingView symbol to extract actual stock name
-    if tv_symbol.endswith("!"):
-        symbol = tv_symbol[:-1]
-    else:
-        symbol = tv_symbol
-
+    symbol = tv_symbol[:-1] if tv_symbol.endswith("!") else tv_symbol
     try:
         instruments = kite.instruments(exchange=exchange)
         df = pd.DataFrame(instruments)
-
-        # Filter for stock futures (FUTSTK) of the given symbol
-        fut_df = df[
-            (df['instrument_type'] == 'FUT') &
-            (df['name'] == symbol.upper())
-        ]
-
+        fut_df = df[(df['instrument_type'] == 'FUT') & (df['name'] == symbol.upper())]
         if fut_df.empty:
-            print(f"No futures contracts found for {symbol} on {exchange}")
+            logger.warning(f"No futures contracts found for {symbol} on {exchange}")
             return []
-
-        # Sort by expiry and pick top 3
         fut_df_sorted = fut_df.sort_values('expiry').head(3)
-
         contracts = []
         for _, row in fut_df_sorted.iterrows():
             contracts.append({
@@ -62,39 +49,47 @@ def get_top_3_futures_from_tv_symbol(tv_symbol, exchange="NFO"):
                 "expiry": row["expiry"],
                 "lot_size": row["lot_size"]
             })
-
         return contracts
-
     except Exception as e:
-        print(f"Error fetching futures contracts: {e}")
+        logger.error(f"Error fetching futures contracts: {e}")
         return []
 
-# Place Order Function
-def place_order(symbol, action, price, segment, quantity=1):
+def place_order(
+    kite: KiteConnect,
+    tradingsymbol: str,
+    action: str,
+    price: float,
+    segment: str,
+    quantity: int = 1
+) -> Optional[str]:
     """
-    Place a market order via Zerodha Kite API.
-    action: "buy" or "sell"
-    symbol: TradingView ticker (NSE:RELIANCE), extract actual symbol
-    price: Price from alert (optional, market order used)
-    quantity: Number of shares/lots
+    Place an order via the KiteConnect API.
+    Args:
+        kite (KiteConnect): KiteConnect API instance
+        tradingsymbol (str): Trading symbol
+        action (str): 'buy' or 'sell'
+        price (float): Price (currently unused, as order_type is MARKET)
+        segment (str): Exchange segment
+        quantity (int): Quantity to trade
+    Returns:
+        Order ID if successful, None otherwise.
+    Raises:
+        Exception: If placing order fails.
     """
     try:
         exchange = segment
-        tradingsymbol = symbol
-
         order_params = {
             "tradingsymbol": tradingsymbol,
             "exchange": exchange,
             "transaction_type": KiteConnect.TRANSACTION_TYPE_BUY if action == "buy" else KiteConnect.TRANSACTION_TYPE_SELL,
             "quantity": quantity,
             "order_type": KiteConnect.ORDER_TYPE_MARKET,
-            "product": KiteConnect.PRODUCT_NRML,  # Or CNC for delivery
+            "product": KiteConnect.PRODUCT_NRML,
             "variety": KiteConnect.VARIETY_REGULAR
         }
-
         order_id = kite.place_order(**order_params)
-        logging.info(f"{action.upper()} order placed for {tradingsymbol}. Order ID: {order_id}")
+        logger.info(f"{action.upper()} order placed for {tradingsymbol}. Order ID: {order_id}")
         return order_id
-
     except Exception as e:
-        logging.error(f"Error placing order: {e}")
+        logger.error(f"Error placing order: {e}")
+        return None
