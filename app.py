@@ -12,8 +12,6 @@ from datetime import datetime, timedelta
 from orders import place_order, get_top_3_futures_from_tv_symbol
 from utils import zerodha_login
 from dotenv import load_dotenv
-import smtplib
-from email.message import EmailMessage
 
 # File lock for cache updates
 active_contracts_lock = threading.Lock()
@@ -26,12 +24,9 @@ WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 REQUEST_TOKEN_FILE = os.getenv("REQUEST_TOKEN_PATH", "request_token.txt")
 ACCESS_TOKEN_FILE = os.getenv("ACCESS_TOKEN_PATH", "access_token.txt")
 ACTIVE_CONTRACTS_FILE = os.getenv("ACTIVE_CONTRACTS_PATH", "cache/active_contracts.json")
-SYMBOLS_CACHE_FILE = os.getenv("SYMBOLS_CACHE_PATH", "cache/symbols_cache.json")
 API_SECRET = os.getenv("KITE_API_SECRET")
 API_KEY = os.getenv("KITE_API_KEY")
-EMAIL_SENDER = os.getenv("EMAIL_SENDER")
-EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+
 
 kite = zerodha_login()
 

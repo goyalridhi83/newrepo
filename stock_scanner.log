@@ -1,359 +1,197 @@
-2025-07-03 17:20:06,333 - __main__ - INFO - Successfully logged in to Zerodha
-2025-07-03 17:20:06,576 - __main__ - INFO - Fetching data for RELIANCE...
-2025-07-03 17:20:06,823 - __main__ - INFO - Fetched 1361 candles for RELIANCE
-2025-07-03 17:20:06,999 - __main__ - INFO - Saved historical data to d:\Data\ZerodhaSwing\newrepo\HistoricalData\historical_data_20250703.csv
-2025-07-04 13:20:06,337 - __main__ - INFO - Successfully logged in to Zerodha
-2025-07-04 13:20:06,476 - __main__ - INFO - Fetching data for RELIANCE...
-2025-07-04 13:20:06,614 - __main__ - INFO - Fetched 1362 candles for RELIANCE
-2025-07-04 13:20:06,668 - __main__ - INFO - Saved historical data to d:\Data\ZerodhaSwing\newrepo\HistoricalData\historical_data_20250704.csv
-2025-07-04 13:20:06,684 - __main__ - INFO - Entered new lot at 950.0. Total active lots: 1
-2025-07-04 13:20:06,698 - __main__ - INFO - Entered new lot at 1200.0. Total active lots: 2
-2025-07-04 13:20:06,702 - __main__ - INFO - Max 2 lots already open. No new lot added.
-2025-07-04 13:20:06,736 - __main__ - INFO - Max 2 lots already open. No new lot added.
-2025-07-04 13:20:06,745 - __main__ - INFO - Max 2 lots already open. No new lot added.
-2025-07-07 12:48:44,537 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 12:48:44,537 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 12:49:37,046 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 12:49:37,046 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 12:50:22,381 - werkzeug - INFO - 192.168.1.8 - - [07/Jul/2025 12:50:22] "[33mGET / HTTP/1.1[0m" 404 -
-2025-07-07 12:50:22,520 - werkzeug - INFO - 192.168.1.8 - - [07/Jul/2025 12:50:22] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
-2025-07-07 12:50:33,033 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 12:50:33] "[33mGET / HTTP/1.1[0m" 404 -
-2025-07-07 12:50:33,167 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 12:50:33] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
-2025-07-07 12:50:42,961 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 12:50:42] "[31m[1mGET /webhook HTTP/1.1[0m" 405 -
-2025-07-07 12:51:22,128 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 12:51:22] "[31m[1mGET /webhook HTTP/1.1[0m" 405 -
-2025-07-07 12:52:17,235 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 12:52:17,236 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 12:52:52,298 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 12:52:52,299 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 12:52:54,042 - root - WARNING - Unauthorized access attempt.
-2025-07-07 12:52:54,044 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 12:52:54] "[31m[1mGET /webhook HTTP/1.1[0m" 401 -
-2025-07-07 13:03:31,829 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 13:03:31,829 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 13:03:38,754 - root - INFO - Received Webhook: {"action": "buy", "symbol": "NSE:RELIANCE", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 13:03:38,756 - root - ERROR - Error placing order: name 'order_id' is not defined
-2025-07-07 13:03:38,757 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 13:03:38] "POST /webhook HTTP/1.1" 200 -
-2025-07-07 13:03:57,302 - root - WARNING - Unauthorized access attempt.
-2025-07-07 13:03:57,303 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 13:03:57] "[31m[1mPOST /webhook HTTP/1.1[0m" 401 -
-2025-07-07 13:04:02,417 - root - INFO - Received Webhook: {"action": "buy", "symbol": "NSE:RELIANCE", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 13:04:02,417 - root - ERROR - Error placing order: name 'order_id' is not defined
-2025-07-07 13:04:02,418 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 13:04:02] "POST /webhook HTTP/1.1" 200 -
-2025-07-07 13:46:27,678 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 13:46:27] "[33mGET / HTTP/1.1[0m" 404 -
-2025-07-07 13:46:28,290 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 13:46:28] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
-2025-07-07 13:47:33,922 - root - INFO - Received Webhook: {"action": "buy", "symbol": "NSE:RELIANCE", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 13:47:33,925 - root - ERROR - Error placing order: name 'order_id' is not defined
-2025-07-07 13:47:33,933 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 13:47:33] "POST /webhook HTTP/1.1" 200 -
-2025-07-07 13:47:42,284 - root - INFO - Received Webhook: {"action": "buy", "symbol": "NSE:RELIANCE", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 13:47:42,284 - root - ERROR - Error placing order: name 'order_id' is not defined
-2025-07-07 13:47:42,286 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 13:47:42] "POST /webhook HTTP/1.1" 200 -
-2025-07-07 13:48:14,897 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 13:48:14,897 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 13:48:33,664 - root - INFO - Received Webhook: {"action": "buy", "symbol": "NSE:RELIANCE", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 14:01:49,887 - root - INFO - Received Webhook: {"action": "buy", "symbol": "NSE:RELIANCE", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 14:01:54,124 - root - ERROR - Error placing order: name 'order_id' is not defined
-2025-07-07 14:01:54,133 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 14:01:54] "POST /webhook HTTP/1.1" 200 -
-2025-07-07 14:01:54,264 - root - ERROR - Error placing order: name 'order_id' is not defined
-2025-07-07 14:01:54,270 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 14:01:54] "POST /webhook HTTP/1.1" 200 -
-2025-07-07 14:08:07,302 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 14:08:07,303 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 14:08:13,776 - root - INFO - Received Webhook: {"action": "buy", "symbol": "NSE:RELIANCE", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 14:08:13,776 - root - ERROR - Error placing order: name 'order_id' is not defined
-2025-07-07 14:08:13,778 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 14:08:13] "POST /webhook?token=xanvestatechsecret HTTP/1.1" 200 -
-2025-07-07 14:57:01,234 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 14:57:01,236 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 14:57:51,346 - root - INFO - Received Webhook: {"action": "buy", "symbol": "RELIANCE!", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 14:57:57,488 - root - ERROR - Error processing webhook.
+2025-07-08 17:53:22,478 - root - ERROR - Rollover scheduler failed
 Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 29, in webhook
-    symbol = get_top_3_futures_from_tv_symbol(symbol)[0]
-             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 47, in rollover_check
+    positions = kite.positions()["net"]
+                ^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 445, in positions
+    return self._get("portfolio.positions")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 861, in _get
+    return self._request(route, "GET", url_args=url_args, params=params, is_json=is_json)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 937, in _request
+    raise exp(data["message"], code=r.status_code)
+kiteconnect.exceptions.InputException: Invalid `api_key` or `access_token`.
+2025-07-08 17:54:07,360 - root - ERROR - Rollover scheduler failed
+Traceback (most recent call last):
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 47, in rollover_check
+    positions = kite.positions()["net"]
+                ^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 445, in positions
+    return self._get("portfolio.positions")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 861, in _get
+    return self._request(route, "GET", url_args=url_args, params=params, is_json=is_json)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 937, in _request
+    raise exp(data["message"], code=r.status_code)
+kiteconnect.exceptions.InputException: Invalid `api_key` or `access_token`.
+2025-07-08 17:55:13,949 - root - INFO - Received Webhook: {"action": "buy", "symbol": "BTCUSD", "price": "108747.55", "time": "1751977380000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
+2025-07-08 17:55:25,743 - root - ERROR - Error processing webhook.
+Traceback (most recent call last):
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 153, in webhook
+    tradingsymbol = get_top_3_futures_from_tv_symbol(tv_symbol, kite)[0]['tradingsymbol']
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
 IndexError: list index out of range
-2025-07-07 14:58:14,462 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 14:58:14] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 14:58:20,305 - root - INFO - Received Webhook: {"action": "buy", "symbol": "RELIANCE!", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 14:59:48,655 - root - ERROR - Error processing webhook.
+2025-07-08 17:57:41,588 - root - ERROR - Rollover scheduler failed
 Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 29, in webhook
-    symbol = get_top_3_futures_from_tv_symbol(symbol)[0]
-             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 47, in rollover_check
+    positions = kite.positions()["net"]
+                ^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 445, in positions
+    return self._get("portfolio.positions")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 861, in _get
+    return self._request(route, "GET", url_args=url_args, params=params, is_json=is_json)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 937, in _request
+    raise exp(data["message"], code=r.status_code)
+kiteconnect.exceptions.InputException: Invalid `api_key` or `access_token`.
+2025-07-08 17:58:09,883 - root - INFO - Access token generated and saved successfully.
+2025-07-08 17:58:40,200 - root - INFO - Received Webhook: {"action": "sell", "symbol": "BTCUSD", "price": "108744.02", "time": "1751977620000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
+2025-07-08 17:58:49,839 - root - ERROR - Error processing webhook.
+Traceback (most recent call last):
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 165, in webhook
+    tradingsymbol = get_top_3_futures_from_tv_symbol(tv_symbol, kite)[0]['tradingsymbol']
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
 IndexError: list index out of range
-2025-07-07 14:59:48,661 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 14:59:48] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 14:59:58,378 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 14:59:58,379 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 15:00:17,704 - root - INFO - Received Webhook: {"action": "buy", "symbol": "RELIANCE!", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 15:14:15,125 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 15:14:15,126 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 15:14:42,003 - root - INFO - Received Webhook: {"action": "buy", "symbol": "RELIANCE!", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 15:16:23,097 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 15:16:23,097 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 15:16:26,996 - root - INFO - Received Webhook: {"action": "buy", "symbol": "RELIANCE!", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 15:17:13,543 - root - ERROR - Error placing order: 'dict' object has no attribute 'replace'
-2025-07-07 15:17:40,566 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 15:17:40,568 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 15:17:45,831 - root - INFO - Received Webhook: {"action": "buy", "symbol": "RELIANCE!", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 15:20:12,579 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 15:20:12,580 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 15:20:23,765 - root - INFO - Received Webhook: {"action": "buy", "symbol": "RELIANCE!", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 15:20:54,735 - root - ERROR - Error placing order: name 'order_id' is not defined
-2025-07-07 15:20:57,296 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 15:20:57] "POST /webhook?token=xanvestatechsecret HTTP/1.1" 200 -
-2025-07-07 15:32:01,303 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 15:32:01,306 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 15:32:10,075 - root - INFO - Received Webhook: {"action": "buy", "symbol": "RELIANCE!", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit"}
-2025-07-07 15:33:30,134 - root - ERROR - Error placing order: NFO is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
-2025-07-07 15:33:32,620 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 15:33:32] "POST /webhook?token=xanvestatechsecret HTTP/1.1" 200 -
-2025-07-07 17:55:06,679 - root - INFO - Received Webhook: {"action": "buy", "symbol": "{{ticker}}", "price": "{{close}}", "time": "{{time}}", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-07 17:57:03,736 - root - INFO - Received Webhook: {"action": "sell", "symbol": "{{ticker}}", "price": "{{close}}", "time": "{{time}}", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-07 17:59:03,006 - root - INFO - Received Webhook: {"action": "buy", "symbol": "{{ticker}}", "price": "{{close}}", "time": "{{time}}", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-07 17:59:07,415 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 17:59:07,416 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 17:59:08,488 - root - ERROR - Error processing webhook.
+2025-07-08 17:58:56,318 - root - ERROR - Rollover scheduler failed
 Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 29, in webhook
-    segment = data.get("segment", "NSE")  # Default to NSE if not provided
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 47, in rollover_check
+    positions = kite.positions()["net"]
+                ^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 445, in positions
+    return self._get("portfolio.positions")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 861, in _get
+    return self._request(route, "GET", url_args=url_args, params=params, is_json=is_json)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 937, in _request
+    raise exp(data["message"], code=r.status_code)
+kiteconnect.exceptions.InputException: Invalid `api_key` or `access_token`.
+2025-07-08 17:59:18,399 - root - INFO - Access token generated and saved successfully.
+2025-07-08 17:59:57,991 - root - INFO - Received Webhook: {"action": "buy", "symbol": "RELIANCE!", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
+2025-07-08 18:00:30,883 - root - ERROR - Error placing order: NFO is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
+2025-07-08 18:00:37,382 - root - INFO - Received Webhook: {"action": "buy", "symbol": "BTCUSD", "price": "108746.75", "time": "1751977740000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
+2025-07-08 18:00:47,740 - root - ERROR - Error processing webhook.
+Traceback (most recent call last):
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 165, in webhook
+    tradingsymbol = get_top_3_futures_from_tv_symbol(tv_symbol, kite)[0]['tradingsymbol']
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
 IndexError: list index out of range
-2025-07-07 17:59:08,505 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 17:59:08] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 17:59:09,327 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 17:59:09,328 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 17:59:10,380 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 17:59:10,382 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 17:59:12,275 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 17:59:12,276 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 17:59:14,980 - root - ERROR - Error processing webhook.
+2025-07-08 18:10:45,154 - root - INFO - Received Webhook: {"action": "sell", "symbol": "BTCUSD", "price": "108739", "time": "1751977860000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
+2025-07-08 18:10:45,156 - root - ERROR - Error processing webhook.
 Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 29, in webhook
-    segment = data.get("segment", "NSE")  # Default to NSE if not provided
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-IndexError: list index out of range
-2025-07-07 17:59:15,015 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 17:59:15] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 17:59:18,901 - root - ERROR - Error processing webhook.
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 161, in webhook
+    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'cache/active_contracts.json'
+2025-07-08 18:10:45,167 - root - INFO - Received Webhook: {"action": "buy", "symbol": "BTCUSD", "price": "108767.87", "time": "1751977920000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
+2025-07-08 18:10:45,167 - root - ERROR - Error processing webhook.
 Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 29, in webhook
-    segment = data.get("segment", "NSE")  # Default to NSE if not provided
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-IndexError: list index out of range
-2025-07-07 17:59:18,907 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 17:59:18] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:06:03,982 - root - INFO - Received Webhook: {"action": "sell", "symbol": "{{ticker}}", "price": "{{close}}", "time": "{{time}}", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-07 18:07:02,853 - root - INFO - Received Webhook: {"action": "buy", "symbol": "{{ticker}}", "price": "{{close}}", "time": "{{time}}", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-07 18:09:02,883 - root - INFO - Received Webhook: {"action": "buy", "symbol": "{{ticker}}", "price": "{{close}}", "time": "{{time}}", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-07 18:13:03,101 - root - INFO - Received Webhook: {"action": "sell", "symbol": "{{ticker}}", "price": "{{close}}", "time": "{{time}}", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-07 18:16:04,486 - root - ERROR - Error processing webhook.
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 161, in webhook
+    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'cache/active_contracts.json'
+2025-07-08 18:10:45,173 - root - INFO - Received Webhook: {"action": "sell", "symbol": "BTCUSD", "price": "108816.38", "time": "1751978100000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
+2025-07-08 18:10:45,175 - root - ERROR - Error processing webhook.
 Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 23, in webhook
-    data = request.get_json()
-           ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 604, in get_json
-    return self.on_json_loading_failed(None)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\wrappers.py", line 214, in on_json_loading_failed
-    return super().on_json_loading_failed(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 647, in on_json_loading_failed
-    raise UnsupportedMediaType(
-werkzeug.exceptions.UnsupportedMediaType: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.
-2025-07-07 18:16:04,495 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:16:04] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:16:10,421 - root - ERROR - Error processing webhook.
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 161, in webhook
+    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'cache/active_contracts.json'
+2025-07-08 18:10:45,180 - root - INFO - Received Webhook: {"action": "sell", "symbol": "BTCUSD", "price": "108819.29", "time": "1751978220000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
+2025-07-08 18:10:45,181 - root - ERROR - Error processing webhook.
 Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 23, in webhook
-    data = request.get_json()
-           ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 604, in get_json
-    return self.on_json_loading_failed(None)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\wrappers.py", line 214, in on_json_loading_failed
-    return super().on_json_loading_failed(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 647, in on_json_loading_failed
-    raise UnsupportedMediaType(
-werkzeug.exceptions.UnsupportedMediaType: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.
-2025-07-07 18:16:10,426 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:16:10] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:16:16,026 - root - ERROR - Error processing webhook.
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 161, in webhook
+    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'cache/active_contracts.json'
+2025-07-08 18:17:05,945 - utils - INFO - Access token loaded and verified.
+2025-07-08 18:17:06,048 - root - INFO - Active contracts updated during rollover check.
+2025-07-08 18:19:02,887 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108870.7,"time":"1751978880000"}
+2025-07-08 18:19:09,967 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 18:19:09,985 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 18:22:18,929 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108882.26,"time":"1751979060000"}
+2025-07-08 18:22:37,709 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 18:22:37,739 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 18:31:06,034 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108985.23,"time":"1751979600000"}
+2025-07-08 18:31:26,937 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 18:31:26,975 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 18:33:03,912 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108990.03,"time":"1751979720000"}
+2025-07-08 18:33:24,279 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 18:33:24,311 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 18:44:07,783 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108845.19,"time":"1751980380000"}
+2025-07-08 18:44:28,068 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 18:44:28,097 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 18:46:38,768 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108837.93,"time":"1751980500000"}
+2025-07-08 18:46:57,650 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 18:46:57,679 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 18:49:35,807 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108852.79,"time":"1751980680000"}
+2025-07-08 18:49:57,908 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 18:49:57,936 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 18:51:13,795 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108836.99,"time":"1751980800000"}
+2025-07-08 18:51:35,323 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 18:51:35,356 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 18:57:12,832 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108867.91,"time":"1751981160000"}
+2025-07-08 18:57:34,323 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 18:57:34,350 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 18:58:04,703 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108828.47,"time":"1751981220000"}
+2025-07-08 18:58:26,078 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 18:58:26,108 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 19:00:17,975 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108900.21,"time":"1751981340000"}
+2025-07-08 19:00:39,608 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 19:00:39,637 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 19:02:06,685 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108815.12,"time":"1751981460000"}
+2025-07-08 19:02:43,515 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 19:02:43,548 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 19:05:08,887 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108730.21,"time":"1751981640000"}
+2025-07-08 19:05:13,256 - orders - ERROR - Error fetching futures contracts: 
+2025-07-08 19:05:13,257 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 19:09:07,831 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108715.51,"time":"1751981880000"}
+2025-07-08 19:09:26,634 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 19:09:26,664 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 19:10:15,013 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108680.91,"time":"1751981940000"}
+2025-07-08 19:10:33,051 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 19:10:33,086 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 19:11:08,710 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108829.25,"time":"1751982000000"}
+2025-07-08 19:11:26,464 - orders - WARNING - No futures contracts found for BTCUSD on NFO
+2025-07-08 19:11:26,491 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
+2025-07-08 19:12:25,808 - asyncio - ERROR - unhandled exception during asyncio.run() shutdown
+task: <Task finished name='Task-3' coro=<lifespan.<locals>.rollover_check() done, defined at D:\Data\ZerodhaSwing\newrepo\app.py:48> exception=MemoryError()>
 Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 23, in webhook
-    data = request.get_json()
-           ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 604, in get_json
-    return self.on_json_loading_failed(None)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\wrappers.py", line 214, in on_json_loading_failed
-    return super().on_json_loading_failed(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 647, in on_json_loading_failed
-    raise UnsupportedMediaType(
-werkzeug.exceptions.UnsupportedMediaType: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.
-2025-07-07 18:16:16,027 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:16:16] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:16:21,718 - root - ERROR - Error processing webhook.
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 641, in run_until_complete
+    self.run_forever()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 608, in run_forever
+    self._run_once()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 1898, in _run_once
+    event_list = self._selector.select(timeout)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\selectors.py", line 323, in select
+    r, w, _ = self._select(self._readers, self._writers, [], timeout)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\selectors.py", line 314, in _select
+    r, w, x = select.select(r, w, w, timeout)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 10055] An operation on a socket could not be performed because the system lacked sufficient buffer space or because a queue was full
+
+During handling of the above exception, another exception occurred:
+
 Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 23, in webhook
-    data = request.get_json()
-           ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 604, in get_json
-    return self.on_json_loading_failed(None)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\wrappers.py", line 214, in on_json_loading_failed
-    return super().on_json_loading_failed(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 647, in on_json_loading_failed
-    raise UnsupportedMediaType(
-werkzeug.exceptions.UnsupportedMediaType: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.
-2025-07-07 18:16:21,721 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:16:21] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:16:58,273 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 29, in webhook
-    segment = data.get("segment", "NSE")  # Default to NSE if not provided
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-IndexError: list index out of range
-2025-07-07 18:16:58,770 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:16:58] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:16:59,362 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 29, in webhook
-    segment = data.get("segment", "NSE")  # Default to NSE if not provided
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-IndexError: list index out of range
-2025-07-07 18:16:59,788 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:16:59] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:17:00,025 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 29, in webhook
-    segment = data.get("segment", "NSE")  # Default to NSE if not provided
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-IndexError: list index out of range
-2025-07-07 18:17:00,301 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:17:00] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:17:01,368 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 29, in webhook
-    segment = data.get("segment", "NSE")  # Default to NSE if not provided
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-IndexError: list index out of range
-2025-07-07 18:17:01,374 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:17:01] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:19:03,111 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 23, in webhook
-    data = request.get_json()
-           ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 604, in get_json
-    return self.on_json_loading_failed(None)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\wrappers.py", line 214, in on_json_loading_failed
-    return super().on_json_loading_failed(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 647, in on_json_loading_failed
-    raise UnsupportedMediaType(
-werkzeug.exceptions.UnsupportedMediaType: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.
-2025-07-07 18:19:03,114 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:19:03] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:19:08,742 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 23, in webhook
-    data = request.get_json()
-           ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 604, in get_json
-    return self.on_json_loading_failed(None)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\wrappers.py", line 214, in on_json_loading_failed
-    return super().on_json_loading_failed(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 647, in on_json_loading_failed
-    raise UnsupportedMediaType(
-werkzeug.exceptions.UnsupportedMediaType: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.
-2025-07-07 18:19:08,745 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:19:08] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:19:14,309 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 23, in webhook
-    data = request.get_json()
-           ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 604, in get_json
-    return self.on_json_loading_failed(None)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\wrappers.py", line 214, in on_json_loading_failed
-    return super().on_json_loading_failed(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 647, in on_json_loading_failed
-    raise UnsupportedMediaType(
-werkzeug.exceptions.UnsupportedMediaType: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.
-2025-07-07 18:19:14,313 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:19:14] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:19:19,881 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 23, in webhook
-    data = request.get_json()
-           ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 604, in get_json
-    return self.on_json_loading_failed(None)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\wrappers.py", line 214, in on_json_loading_failed
-    return super().on_json_loading_failed(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sumit\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\wrappers\request.py", line 647, in on_json_loading_failed
-    raise UnsupportedMediaType(
-werkzeug.exceptions.UnsupportedMediaType: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.
-2025-07-07 18:19:19,886 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:19:19] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
-2025-07-07 18:24:02,878 - root - INFO - Received Webhook: {"action": "sell", "symbol": "BTCUSDT", "price": "108384.25", "time": "1751892780000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-07 18:28:22,941 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5000
- * Running on http://192.168.1.8:5000
-2025-07-07 18:28:22,941 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
-2025-07-07 18:30:12,718 - root - INFO - Received Webhook: {"action": "buy", "symbol": "BTCUSDT", "price": "108346.85", "time": "1751893140000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-07 18:31:47,644 - root - ERROR - Error placing order: NFO is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
-2025-07-07 18:31:47,654 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:31:47] "POST /webhook?token=xanvestatechsecret HTTP/1.1" 200 -
-2025-07-07 18:33:02,879 - root - INFO - Received Webhook: {"action": "sell", "symbol": "BTCUSDT", "price": "108315.86", "time": "1751893320000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-07 18:34:03,736 - root - INFO - Received Webhook: {"action": "buy", "symbol": "BTCUSDT", "price": "108359", "time": "1751893380000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-07 18:34:08,486 - root - INFO - No holdings for RELIANCE25JULFUT. Skipping sell order to avoid short selling.
-2025-07-07 18:34:08,492 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:34:08] "POST /webhook?token=xanvestatechsecret HTTP/1.1" 200 -
-2025-07-07 18:34:12,427 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "d:\Data\ZerodhaSwing\newrepo\app.py", line 39, in webhook
-    symbol_info = get_top_3_futures_from_tv_symbol(tv_symbol)[0]
-                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
-IndexError: list index out of range
-2025-07-07 18:34:12,435 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 18:34:12] "[35m[1mPOST /webhook?token=xanvestatechsecret HTTP/1.1[0m" 500 -
+  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 90, in rollover_check
+    await asyncio.sleep(24 * 60 * 60)
+  File "_pydevd_bundle\\pydevd_cython.pyx", line 1697, in _pydevd_bundle.pydevd_cython.SafeCallWrapper.__call__
+  File "_pydevd_bundle\\pydevd_cython.pyx", line 634, in _pydevd_bundle.pydevd_cython.PyDBFrame.trace_dispatch
+  File "_pydevd_bundle\\pydevd_cython.pyx", line 722, in _pydevd_bundle.pydevd_cython.PyDBFrame.trace_dispatch
+  File "c:\Users\Sumit\.windsurf\extensions\ms-python.debugpy-2025.6.0-win32-x64\bundled\libs\debugpy\_vendored\pydevd\_pydevd_bundle\pydevd_collect_bytecode_info.py", line 109, in collect_return_info
+    for instruction in iter_instructions(co):
+  File "c:\Users\Sumit\.windsurf\extensions\ms-python.debugpy-2025.6.0-win32-x64\bundled\libs\debugpy\_vendored\pydevd\_pydevd_bundle\pydevd_collect_bytecode_info.py", line 91, in iter_instructions
+    bytecode_to_instruction[instruction.offset] = instruction
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+MemoryError
