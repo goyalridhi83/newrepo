@@ -34,6 +34,8 @@ def get_top_3_futures_from_tv_symbol(tv_symbol: str, kite: KiteConnect, exchange
         Exception: If fetching instruments fails.
     """
     symbol = tv_symbol[:-1] if tv_symbol.endswith("!") else tv_symbol
+    if( symbol.endswith("1") or symbol.endswith("2") or symbol.endswith("3")):
+        symbol = symbol[:-1]
     try:
         instruments = kite.instruments(exchange=exchange)
         df = pd.DataFrame(instruments)
@@ -78,13 +80,21 @@ def place_order(
     """
     try:
         exchange = segment
+        # Set product type based on segment
+        if segment == "NFO":
+            product_type = KiteConnect.PRODUCT_NRML
+        elif segment == "NSE":
+            product_type = KiteConnect.PRODUCT_CNC
+        else:
+            product_type = KiteConnect.PRODUCT_NRML  # Default fallback
+
         order_params = {
             "tradingsymbol": tradingsymbol,
             "exchange": exchange,
             "transaction_type": KiteConnect.TRANSACTION_TYPE_BUY if action == "buy" else KiteConnect.TRANSACTION_TYPE_SELL,
             "quantity": quantity,
             "order_type": KiteConnect.ORDER_TYPE_MARKET,
-            "product": KiteConnect.PRODUCT_NRML,
+            "product": product_type,
             "variety": KiteConnect.VARIETY_REGULAR
         }
         order_id = kite.place_order(**order_params)
