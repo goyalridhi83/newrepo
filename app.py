@@ -36,6 +36,7 @@ class WebhookPayload(BaseModel):
     segment: str = "NSE"
     price: float = 0.0
     time: str = None
+    quantity: int = 1  # Optional, default 1
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -88,9 +89,9 @@ async def lifespan(app: FastAPI):
                         qty_held = existing_position["quantity"] if existing_position else 0
                         if qty_held > 0:
                             segment = existing_position["exchange"]
-                            order_id = place_order(kite, current_symbol, "sell", 0, segment, quantity=qty_held)
+                            order_id, error = place_order(kite, current_symbol, "sell", 0, segment, quantity=qty_held)
                             if order_id:
-                                order_id = place_order(kite, next_symbol, "buy", 0, segment, quantity=qty_held)
+                                order_id, error = place_order(kite, next_symbol, "buy", 0, segment, quantity=qty_held)
                                 if order_id:
                                     logging.info(f"✅ Rolled over {sym} from {current_symbol} to {next_symbol}")
                                     active_map[sym.upper()] = next_symbol
@@ -111,6 +112,23 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 logging.basicConfig(level=logging.INFO)
+
+from fastapi.responses import PlainTextResponse
+
+@app.get("/logs", response_class=PlainTextResponse)
+def get_logs(lines: int = 100):
+    """Endpoint to fetch the last N lines of the log file for live monitoring."""
+    log_path = "stock_scanner.log"
+    if not os.path.exists(log_path):
+        return PlainTextResponse("Log file not found.", status_code=404)
+    try:
+        with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+            all_lines = f.readlines()
+        # Return only the last N lines
+        output = "".join(all_lines[-lines:])
+        return PlainTextResponse(output, status_code=200)
+    except Exception as e:
+        return PlainTextResponse(f"Error reading log file: {e}", status_code=500)
 
 @app.get("/token", response_class=HTMLResponse)
 def token_form() -> HTMLResponse:
@@ -184,6 +202,11 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
         segment = payload.segment
         price = payload.price
         time_received = payload.time
+        # Extract quantity
+        quantity = payload.quantity if hasattr(payload, 'quantity') and payload.quantity else 1
+        # For NFO/MCX, always force quantity to 1
+        if segment in ["NFO", "MCX"]:
+            quantity = 1
 
         if action not in ["buy", "sell"]:
             logging.error(f"Invalid action received: {action}")
@@ -231,17 +254,23 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
                 logging.info(f"Already holding {tradingsymbol}. Skipping buy.")
                 return JSONResponse(content={"status": "already holding, buy skipped"}, status_code=200)
             else:
-                order_id = place_order(kite, tradingsymbol, action, price, segment)
-                if order_id and (segment == "NFO" or segment == "MCX"):
-                    update_active_contract(active_symbol, tradingsymbol, action="buy")
-                return JSONResponse(content={"status": "buy order placed", "order_id": order_id}, status_code=200)
+                order_id, error = place_order(kite, tradingsymbol, action, price, segment, quantity)
+                if order_id:
+                    if(segment == "NFO" or segment == "MCX"):
+                        update_active_contract(active_symbol, tradingsymbol, action="buy")
+                    return JSONResponse(content={"status": "buy order placed", "order_id": order_id}, status_code=200)
+                elif error:
+                    return JSONResponse(content={"status": "buy order failed", "error": error}, status_code=500)
         elif action == "sell":
             if qty_held <= 0:
                 logging.info(f"No holdings for {tradingsymbol}. Skipping sell.")
                 return JSONResponse(content={"status": "no holdings, sell skipped"}, status_code=200)
             else:
-                order_id = place_order(kite, tradingsymbol, action, price, segment)
-                return JSONResponse(content={"status": "sell order placed", "order_id": order_id}, status_code=200)
+                order_id, error = place_order(kite, tradingsymbol, action, price, segment, quantity)
+                if order_id:
+                    return JSONResponse(content={"status": "sell order placed", "order_id": order_id}, status_code=200)
+                elif error:
+                    return JSONResponse(content={"status": "sell order failed", "error": error}, status_code=500)
 
     except HTTPException as he:
         raise he

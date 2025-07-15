@@ -99,7 +99,7 @@ def place_order(
         }
         order_id = kite.place_order(**order_params)
         logger.info(f"{action.upper()} order placed for {tradingsymbol}. Order ID: {order_id}")
-        return order_id
+        return (order_id, None)
     except Exception as e:
         logger.error(f"Error placing order: {e}")
-        return None
+        return (None, str(e))
