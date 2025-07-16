@@ -195,6 +195,19 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
     if token != WEBHOOK_SECRET:
         logging.warning("Unauthorized access attempt.")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+    # --- Idempotency logic using timestamp ---
+    if not hasattr(app, "_processed_timestamps"):
+        app._processed_timestamps = set()
+        app._timestamps_lock = threading.Lock()
+    timestamp = payload.time
+    if not timestamp:
+        logging.error("No timestamp provided in payload. Cannot ensure idempotency.")
+        return JSONResponse(content={"status": "error", "message": "No timestamp in payload."}, status_code=400)
+    with app._timestamps_lock:
+        if timestamp in app._processed_timestamps:
+            logging.info(f"Duplicate alert received for timestamp {timestamp}. Skipping processing.")
+            return JSONResponse(content={"status": "duplicate", "message": "Alert already processed."}, status_code=200)
+        app._processed_timestamps.add(timestamp)
     try:
         logging.info(f"Received Webhook: {payload.json()}")
         action = payload.action
@@ -260,7 +273,8 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
                         update_active_contract(active_symbol, tradingsymbol, action="buy")
                     return JSONResponse(content={"status": "buy order placed", "order_id": order_id}, status_code=200)
                 elif error:
-                    return JSONResponse(content={"status": "buy order failed", "error": error}, status_code=500)
+                    logging.error(f"Buy order failed: {error}")
+                    return JSONResponse(content={"status": "buy order failed", "error": error}, status_code=200)
         elif action == "sell":
             if qty_held <= 0:
                 logging.info(f"No holdings for {tradingsymbol}. Skipping sell.")
@@ -270,10 +284,12 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
                 if order_id:
                     return JSONResponse(content={"status": "sell order placed", "order_id": order_id}, status_code=200)
                 elif error:
-                    return JSONResponse(content={"status": "sell order failed", "error": error}, status_code=500)
+                    logging.error(f"Sell order failed: {error}")
+                    return JSONResponse(content={"status": "sell order failed", "error": error}, status_code=200)
 
     except HTTPException as he:
         raise he
     except Exception as e:
         logging.exception("Error processing webhook.")
-        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+        # Always return 200 OK to avoid TradingView retries, but log the error for review
+        return JSONResponse(status_code=200, content={"status": "error", "message": str(e)})
