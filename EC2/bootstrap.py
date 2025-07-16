@@ -15,7 +15,7 @@ instance_type = "t3.micro"
 key_name = "fastapi-key"
 security_group_ids = ["sg-03239302b41fb1f9b"]
 subnet_id = "subnet-0c21652e5bde06a58"
-eip_allocation_id = "eipassoc-02b53c92f483cdc30"
+eip_allocation_id = "eipalloc-000a4c982d826f568"
 
 user_data_script = """#!/bin/bash
 set -e
