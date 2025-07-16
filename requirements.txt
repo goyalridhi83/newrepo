@@ -4,3 +4,4 @@ pandas
 python-dotenv
 kiteconnect
 python-multipart
+boto3

@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+      {
+        "name": "FastAPI: app.py",
+        "type": "python",
+        "request": "launch",
+        "module": "uvicorn",
+        "args": [
+          "app:app",                // This assumes your file is named app.py
+          "--reload",
+          "--host", "127.0.0.1",
+          "--port", "5000"
+        ],
+        "justMyCode": false,
+        "envFile": "${workspaceFolder}/.env"
+      }
+    ]
+  }
+  
