@@ -12,6 +12,8 @@ from datetime import datetime, timedelta
 from orders import place_order, get_top_3_futures_from_tv_symbol
 from utils import zerodha_login
 from dotenv import load_dotenv
+import pytz
+from dateutil import parser as dtparser
 
 # File lock for cache updates
 active_contracts_lock = threading.Lock()
@@ -111,7 +113,24 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
-logging.basicConfig(level=logging.INFO)
+import pytz
+from datetime import datetime
+
+class ISTFormatter(logging.Formatter):
+    def converter(self, timestamp):
+        dt = datetime.fromtimestamp(timestamp, pytz.timezone('Asia/Kolkata'))
+        return dt
+    def formatTime(self, record, datefmt=None):
+        dt = self.converter(record.created)
+        if datefmt:
+            s = dt.strftime(datefmt)
+        else:
+            s = dt.strftime("%Y-%m-%d %H:%M:%S")
+        return s
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+for handler in logging.root.handlers:
+    handler.setFormatter(ISTFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
 
 from fastapi.responses import PlainTextResponse
 
@@ -152,18 +171,28 @@ def token_form() -> HTMLResponse:
         logging.exception("Failed to generate login URL")
         return HTMLResponse(content=f"<p>Error: {str(e)}</p>", status_code=500)
 
+from fastapi.responses import HTMLResponse
+
 @app.post("/token")
-def save_and_refresh_token(token: str = Form(...)) -> JSONResponse:
-    """Save and refresh Zerodha access token."""
+def save_and_refresh_token(token: str = Form(...)) -> HTMLResponse:
+    """Save and refresh Zerodha access token, and validate it."""
     try:
         access_token = kite.generate_session(token, api_secret=API_SECRET)["access_token"]
         with open(ACCESS_TOKEN_FILE, "w") as f:
             f.write(access_token)
-        logging.info("Access token generated and saved successfully.")
-        return JSONResponse(content={"status": "Access token generated"}, status_code=200)
+        # Validate token by making a simple API call
+        try:
+            kite.set_access_token(access_token)
+            profile = kite.profile()  # Will raise if invalid
+            logging.info("Access token validated and saved successfully.")
+            return HTMLResponse(content="<b>Token is valid! Login successful.</b>", status_code=200)
+        except Exception as ve:
+            logging.error(f"Token saved but validation failed: {ve}")
+            return HTMLResponse(content=f"<b>Invalid token:</b> {str(ve)}", status_code=400)
     except Exception as e:
         logging.exception("Failed to save and refresh token")
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        return HTMLResponse(content=f"<b>Error:</b> {str(e)}", status_code=500)
+
 
 
 def update_active_contract(active_symbol, tradingsymbol, action, quantity=None):
@@ -209,7 +238,19 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
             return JSONResponse(content={"status": "duplicate", "message": "Alert already processed."}, status_code=200)
         app._processed_timestamps.add(timestamp)
     try:
-        logging.info(f"Received Webhook: {payload.json()}")
+        # Convert payload.time (UTC) to IST for logging
+        utc_time = None
+        ist_time_str = None
+        if payload.time:
+            try:
+                utc_time = dtparser.parse(payload.time)
+                if utc_time.tzinfo is None:
+                    utc_time = pytz.utc.localize(utc_time)
+                ist_time = utc_time.astimezone(pytz.timezone('Asia/Kolkata'))
+                ist_time_str = ist_time.strftime('%Y-%m-%d %H:%M:%S %Z')
+            except Exception as e:
+                logging.warning(f"Could not parse payload.time: {payload.time} ({e})")
+        logging.info(f"Received Webhook: {payload.json()} | payload.time (UTC): {payload.time} | IST: {ist_time_str}")
         action = payload.action
         tv_symbol = payload.symbol
         segment = payload.segment

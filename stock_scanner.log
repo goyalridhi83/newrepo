@@ -1,197 +1,28 @@
-2025-07-08 17:53:22,478 - root - ERROR - Rollover scheduler failed
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 47, in rollover_check
-    positions = kite.positions()["net"]
-                ^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 445, in positions
-    return self._get("portfolio.positions")
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 861, in _get
-    return self._request(route, "GET", url_args=url_args, params=params, is_json=is_json)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 937, in _request
-    raise exp(data["message"], code=r.status_code)
-kiteconnect.exceptions.InputException: Invalid `api_key` or `access_token`.
-2025-07-08 17:54:07,360 - root - ERROR - Rollover scheduler failed
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 47, in rollover_check
-    positions = kite.positions()["net"]
-                ^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 445, in positions
-    return self._get("portfolio.positions")
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 861, in _get
-    return self._request(route, "GET", url_args=url_args, params=params, is_json=is_json)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 937, in _request
-    raise exp(data["message"], code=r.status_code)
-kiteconnect.exceptions.InputException: Invalid `api_key` or `access_token`.
-2025-07-08 17:55:13,949 - root - INFO - Received Webhook: {"action": "buy", "symbol": "BTCUSD", "price": "108747.55", "time": "1751977380000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-08 17:55:25,743 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 153, in webhook
-    tradingsymbol = get_top_3_futures_from_tv_symbol(tv_symbol, kite)[0]['tradingsymbol']
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
-IndexError: list index out of range
-2025-07-08 17:57:41,588 - root - ERROR - Rollover scheduler failed
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 47, in rollover_check
-    positions = kite.positions()["net"]
-                ^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 445, in positions
-    return self._get("portfolio.positions")
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 861, in _get
-    return self._request(route, "GET", url_args=url_args, params=params, is_json=is_json)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 937, in _request
-    raise exp(data["message"], code=r.status_code)
-kiteconnect.exceptions.InputException: Invalid `api_key` or `access_token`.
-2025-07-08 17:58:09,883 - root - INFO - Access token generated and saved successfully.
-2025-07-08 17:58:40,200 - root - INFO - Received Webhook: {"action": "sell", "symbol": "BTCUSD", "price": "108744.02", "time": "1751977620000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-08 17:58:49,839 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 165, in webhook
-    tradingsymbol = get_top_3_futures_from_tv_symbol(tv_symbol, kite)[0]['tradingsymbol']
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
-IndexError: list index out of range
-2025-07-08 17:58:56,318 - root - ERROR - Rollover scheduler failed
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 47, in rollover_check
-    positions = kite.positions()["net"]
-                ^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 445, in positions
-    return self._get("portfolio.positions")
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 861, in _get
-    return self._request(route, "GET", url_args=url_args, params=params, is_json=is_json)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "d:\Data\ZerodhaSwing\newrepo\venv\Lib\site-packages\kiteconnect\connect.py", line 937, in _request
-    raise exp(data["message"], code=r.status_code)
-kiteconnect.exceptions.InputException: Invalid `api_key` or `access_token`.
-2025-07-08 17:59:18,399 - root - INFO - Access token generated and saved successfully.
-2025-07-08 17:59:57,991 - root - INFO - Received Webhook: {"action": "buy", "symbol": "RELIANCE!", "price": "2900", "time": "2025-07-07 10:00", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-08 18:00:30,883 - root - ERROR - Error placing order: NFO is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
-2025-07-08 18:00:37,382 - root - INFO - Received Webhook: {"action": "buy", "symbol": "BTCUSD", "price": "108746.75", "time": "1751977740000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-08 18:00:47,740 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 165, in webhook
-    tradingsymbol = get_top_3_futures_from_tv_symbol(tv_symbol, kite)[0]['tradingsymbol']
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
-IndexError: list index out of range
-2025-07-08 18:10:45,154 - root - INFO - Received Webhook: {"action": "sell", "symbol": "BTCUSD", "price": "108739", "time": "1751977860000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-08 18:10:45,156 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 161, in webhook
-    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: 'cache/active_contracts.json'
-2025-07-08 18:10:45,167 - root - INFO - Received Webhook: {"action": "buy", "symbol": "BTCUSD", "price": "108767.87", "time": "1751977920000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-08 18:10:45,167 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 161, in webhook
-    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: 'cache/active_contracts.json'
-2025-07-08 18:10:45,173 - root - INFO - Received Webhook: {"action": "sell", "symbol": "BTCUSD", "price": "108816.38", "time": "1751978100000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-08 18:10:45,175 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 161, in webhook
-    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: 'cache/active_contracts.json'
-2025-07-08 18:10:45,180 - root - INFO - Received Webhook: {"action": "sell", "symbol": "BTCUSD", "price": "108819.29", "time": "1751978220000", "strategy": "Swing Trading with No Loss Exit", "segment": "NFO"}
-2025-07-08 18:10:45,181 - root - ERROR - Error processing webhook.
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 161, in webhook
-    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: 'cache/active_contracts.json'
-2025-07-08 18:17:05,945 - utils - INFO - Access token loaded and verified.
-2025-07-08 18:17:06,048 - root - INFO - Active contracts updated during rollover check.
-2025-07-08 18:19:02,887 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108870.7,"time":"1751978880000"}
-2025-07-08 18:19:09,967 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 18:19:09,985 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 18:22:18,929 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108882.26,"time":"1751979060000"}
-2025-07-08 18:22:37,709 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 18:22:37,739 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 18:31:06,034 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108985.23,"time":"1751979600000"}
-2025-07-08 18:31:26,937 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 18:31:26,975 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 18:33:03,912 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108990.03,"time":"1751979720000"}
-2025-07-08 18:33:24,279 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 18:33:24,311 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 18:44:07,783 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108845.19,"time":"1751980380000"}
-2025-07-08 18:44:28,068 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 18:44:28,097 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 18:46:38,768 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108837.93,"time":"1751980500000"}
-2025-07-08 18:46:57,650 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 18:46:57,679 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 18:49:35,807 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108852.79,"time":"1751980680000"}
-2025-07-08 18:49:57,908 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 18:49:57,936 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 18:51:13,795 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108836.99,"time":"1751980800000"}
-2025-07-08 18:51:35,323 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 18:51:35,356 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 18:57:12,832 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108867.91,"time":"1751981160000"}
-2025-07-08 18:57:34,323 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 18:57:34,350 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 18:58:04,703 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108828.47,"time":"1751981220000"}
-2025-07-08 18:58:26,078 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 18:58:26,108 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 19:00:17,975 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108900.21,"time":"1751981340000"}
-2025-07-08 19:00:39,608 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 19:00:39,637 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 19:02:06,685 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108815.12,"time":"1751981460000"}
-2025-07-08 19:02:43,515 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 19:02:43,548 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 19:05:08,887 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108730.21,"time":"1751981640000"}
-2025-07-08 19:05:13,256 - orders - ERROR - Error fetching futures contracts: 
-2025-07-08 19:05:13,257 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 19:09:07,831 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108715.51,"time":"1751981880000"}
-2025-07-08 19:09:26,634 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 19:09:26,664 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 19:10:15,013 - root - INFO - Received Webhook: {"action":"sell","symbol":"BTCUSD","segment":"NFO","price":108680.91,"time":"1751981940000"}
-2025-07-08 19:10:33,051 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 19:10:33,086 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 19:11:08,710 - root - INFO - Received Webhook: {"action":"buy","symbol":"BTCUSD","segment":"NFO","price":108829.25,"time":"1751982000000"}
-2025-07-08 19:11:26,464 - orders - WARNING - No futures contracts found for BTCUSD on NFO
-2025-07-08 19:11:26,491 - root - ERROR - Error fetching active contract: 404: No futures contracts found for BTCUSD
-2025-07-08 19:12:25,808 - asyncio - ERROR - unhandled exception during asyncio.run() shutdown
-task: <Task finished name='Task-3' coro=<lifespan.<locals>.rollover_check() done, defined at D:\Data\ZerodhaSwing\newrepo\app.py:48> exception=MemoryError()>
-Traceback (most recent call last):
-  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\asyncio\runners.py", line 190, in run
-    return runner.run(main)
-           ^^^^^^^^^^^^^^^^
-  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\asyncio\runners.py", line 118, in run
-    return self._loop.run_until_complete(task)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 641, in run_until_complete
-    self.run_forever()
-  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 608, in run_forever
-    self._run_once()
-  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 1898, in _run_once
-    event_list = self._selector.select(timeout)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\selectors.py", line 323, in select
-    r, w, _ = self._select(self._readers, self._writers, [], timeout)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\selectors.py", line 314, in _select
-    r, w, x = select.select(r, w, w, timeout)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-OSError: [WinError 10055] An operation on a socket could not be performed because the system lacked sufficient buffer space or because a queue was full
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "D:\Data\ZerodhaSwing\newrepo\app.py", line 90, in rollover_check
-    await asyncio.sleep(24 * 60 * 60)
-  File "_pydevd_bundle\\pydevd_cython.pyx", line 1697, in _pydevd_bundle.pydevd_cython.SafeCallWrapper.__call__
-  File "_pydevd_bundle\\pydevd_cython.pyx", line 634, in _pydevd_bundle.pydevd_cython.PyDBFrame.trace_dispatch
-  File "_pydevd_bundle\\pydevd_cython.pyx", line 722, in _pydevd_bundle.pydevd_cython.PyDBFrame.trace_dispatch
-  File "c:\Users\Sumit\.windsurf\extensions\ms-python.debugpy-2025.6.0-win32-x64\bundled\libs\debugpy\_vendored\pydevd\_pydevd_bundle\pydevd_collect_bytecode_info.py", line 109, in collect_return_info
-    for instruction in iter_instructions(co):
-  File "c:\Users\Sumit\.windsurf\extensions\ms-python.debugpy-2025.6.0-win32-x64\bundled\libs\debugpy\_vendored\pydevd\_pydevd_bundle\pydevd_collect_bytecode_info.py", line 91, in iter_instructions
-    bytecode_to_instruction[instruction.offset] = instruction
-    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
-MemoryError
+2025-07-16 11:31:54 - root - WARNING - Could not parse payload.time: 2025-07-16T06:01:00Z (cannot access local variable 'pytz' where it is not associated with a value)
+2025-07-16 11:31:57 - root - INFO - Received Webhook: {"action":"buy","symbol":"JIOFIN1!","segment":"NFO","price":320.8,"time":"2025-07-16T06:01:00Z","quantity":1} | payload.time (UTC): 2025-07-16T06:01:00Z | IST: None
+2025-07-16 11:36:59 - root - WARNING - Could not parse payload.time: 2025-07-16T06:01:00Z (cannot access local variable 'pytz' where it is not associated with a value)
+2025-07-16 11:36:59 - root - INFO - Received Webhook: {"action":"buy","symbol":"JIOFIN1!","segment":"NFO","price":320.8,"time":"2025-07-16T06:01:00Z","quantity":1} | payload.time (UTC): 2025-07-16T06:01:00Z | IST: None
+2025-07-16 11:37:05 - orders - ERROR - Error placing order: NFO is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
+2025-07-16 11:37:05 - root - ERROR - Buy order failed: NFO is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
+2025-07-16 11:37:12 - root - WARNING - Could not parse payload.time: 2025-07-16T06:02:00Z (cannot access local variable 'pytz' where it is not associated with a value)
+2025-07-16 11:37:12 - root - INFO - Received Webhook: {"action":"buy","symbol":"COPPER1!","segment":"MCX","price":880.2,"time":"2025-07-16T06:02:00Z","quantity":1} | payload.time (UTC): 2025-07-16T06:02:00Z | IST: None
+2025-07-16 11:37:15 - orders - ERROR - Error placing order: MCX is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
+2025-07-16 11:37:15 - root - ERROR - Buy order failed: MCX is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
+2025-07-16 11:37:17 - root - WARNING - Could not parse payload.time: 2025-07-16T06:05:00Z (cannot access local variable 'pytz' where it is not associated with a value)
+2025-07-16 11:37:17 - root - INFO - Received Webhook: {"action":"buy","symbol":"COPPER1!","segment":"MCX","price":880.5,"time":"2025-07-16T06:05:00Z","quantity":1} | payload.time (UTC): 2025-07-16T06:05:00Z | IST: None
+2025-07-16 11:37:21 - orders - ERROR - Error placing order: MCX is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
+2025-07-16 11:37:21 - root - ERROR - Buy order failed: MCX is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
+2025-07-16 11:37:25 - root - WARNING - Could not parse payload.time: 2025-07-16T06:04:00Z (cannot access local variable 'pytz' where it is not associated with a value)
+2025-07-16 11:37:25 - root - INFO - Received Webhook: {"action":"sell","symbol":"COPPER1!","segment":"MCX","price":880.5,"time":"2025-07-16T06:04:00Z","quantity":1} | payload.time (UTC): 2025-07-16T06:04:00Z | IST: None
+2025-07-16 11:37:28 - root - INFO - No holdings for COPPER25JULFUT. Skipping sell.
+2025-07-16 11:37:32,980 - utils - INFO - Access token loaded and verified.
+2025-07-16 11:37:32 - root - INFO - rollover_check sleeping for 1307.45 minutes until next weekday 9:25 AM
+2025-07-16 11:37:54 - root - INFO - Received Webhook: {"action":"sell","symbol":"COPPER1!","segment":"MCX","price":880.85,"time":"2025-07-16T06:07:00Z","quantity":1} | payload.time (UTC): 2025-07-16T06:07:00Z | IST: 2025-07-16 11:37:00 IST
+2025-07-16 11:37:59 - root - INFO - No holdings for COPPER25JULFUT. Skipping sell.
+2025-07-16 11:38:10,817 - utils - INFO - Access token loaded and verified.
+2025-07-16 11:38:10 - root - INFO - rollover_check sleeping for 1306.82 minutes until next weekday 9:25 AM
+2025-07-16 11:38:15,268 - utils - INFO - Access token loaded and verified.
+2025-07-16 11:38:15 - root - INFO - rollover_check sleeping for 1306.75 minutes until next weekday 9:25 AM
+2025-07-16 11:38:18 - root - INFO - Received Webhook: {"action":"buy","symbol":"COPPER1!","segment":"MCX","price":880.95,"time":"2025-07-16T06:08:00Z","quantity":1} | payload.time (UTC): 2025-07-16T06:08:00Z | IST: 2025-07-16 11:38:00 IST
+2025-07-16 11:38:22 - orders - ERROR - Error placing order: MCX is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
+2025-07-16 11:38:22 - root - ERROR - Buy order failed: MCX is disabled for your account. You can activate the segment on [Console.](https://console.zerodha.com/account/segment-activation)
