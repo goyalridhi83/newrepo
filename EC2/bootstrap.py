@@ -150,7 +150,7 @@ fi
 
 # Issue certificate only if not present
 if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-    sudo certbot --nginx --staging -d "$DOMAIN" --non-interactive --agree-tos -m "$EMAIL" --redirect
+    sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$EMAIL" --redirect
     # Backup new certs to S3
     echo "Uploading new SSL certificates to S3..."
     sudo aws s3 sync /etc/letsencrypt/ "s3://$BUCKET/letsencrypt/"
@@ -341,3 +341,32 @@ if __name__ == "__main__":
     new_instance_id = launch_instance()
     detach_eip_if_associated()
     attach_eip(new_instance_id)
+
+    # --- Stream EC2 console output logs at the end ---
+    import time
+    import sys
+    import botocore
+    logger.info(f"Streaming EC2 instance {new_instance_id} console output logs after all steps...")
+    timeout = 600  # 10 minutes max
+    poll_interval = 10
+    elapsed = 0
+    last_output = None
+    while elapsed < timeout:
+        try:
+            resp = ec2_client.get_console_output(InstanceId=new_instance_id, Latest=True)
+            output = resp.get('Output', '')
+            if output and output != last_output:
+                sys.stdout.write("\n--- EC2 Console Output ---\n")
+                sys.stdout.write(output + "\n")
+                sys.stdout.flush()
+                last_output = output
+        except botocore.exceptions.ClientError as e:
+            logger.warning(f"Error fetching console output: {e}")
+        # Check instance status
+        status_resp = ec2_client.describe_instance_status(InstanceIds=[new_instance_id])
+        statuses = status_resp.get('InstanceStatuses', [])
+        if statuses and statuses[0]['InstanceStatus']['Status'] == 'ok':
+            logger.info("Instance passed status checks. Stopping log stream.")
+            break
+        time.sleep(poll_interval)
+        elapsed += poll_interval

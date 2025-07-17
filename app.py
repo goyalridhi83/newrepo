@@ -43,6 +43,21 @@ class WebhookPayload(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event for FastAPI app. Starts the rollover background task."""
+    # --- Build instrument cache for all segments on startup ---
+    from orders import INSTRUMENTS_CACHE, INSTRUMENTS_CACHE_LOCK
+    segments = ["NFO", "MCX"]
+    try:
+        with INSTRUMENTS_CACHE_LOCK:
+            for seg in segments:
+                try:
+                    instruments = kite.instruments(exchange=seg)
+                    import pandas as pd
+                    INSTRUMENTS_CACHE[seg] = pd.DataFrame(instruments)
+                    logging.info(f"[Startup] Built instrument cache for segment {seg}")
+                except Exception as e:
+                    logging.error(f"[Startup] Failed to build instrument cache for {seg}: {e}")
+    except Exception as e:
+        logging.error(f"[Startup] Unexpected error building instrument cache: {e}")
     async def rollover_check():
         import time
         from orders import INSTRUMENTS_CACHE, INSTRUMENTS_CACHE_LOCK
