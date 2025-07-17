@@ -45,6 +45,8 @@ async def lifespan(app: FastAPI):
     """Lifespan event for FastAPI app. Starts the rollover background task."""
     async def rollover_check():
         import time
+        from orders import INSTRUMENTS_CACHE, INSTRUMENTS_CACHE_LOCK
+        segments = ["NFO", "MCX"]
         while True:
             try:
                 now = datetime.now()
@@ -59,6 +61,16 @@ async def lifespan(app: FastAPI):
                 sleep_seconds = (next_run - now).total_seconds()
                 logging.info(f"rollover_check sleeping for {sleep_seconds/60:.2f} minutes until next weekday 9:25 AM")
                 await asyncio.sleep(sleep_seconds)
+                # --- Update instrument cache for all segments ---
+                with INSTRUMENTS_CACHE_LOCK:
+                    for seg in segments:
+                        try:
+                            instruments = kite.instruments(exchange=seg)
+                            import pandas as pd
+                            INSTRUMENTS_CACHE[seg] = pd.DataFrame(instruments)
+                            logging.info(f"Refreshed instrument cache for segment {seg}")
+                        except Exception as e:
+                            logging.error(f"Failed to refresh instrument cache for {seg}: {e}")
                 # --- Rollover logic starts here ---
                 today = datetime.now().date()
                 if not os.path.exists(ACTIVE_CONTRACTS_FILE):

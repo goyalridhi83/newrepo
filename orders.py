@@ -21,24 +21,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+import threading
+
+INSTRUMENTS_CACHE = {}
+INSTRUMENTS_CACHE_LOCK = threading.Lock()
+
 def get_top_3_futures_from_tv_symbol(tv_symbol: str, kite: KiteConnect, exchange: str = "NFO") -> List[Dict[str, Any]]:
     """
     Retrieve the top 3 nearest expiry futures contracts for a given symbol from TradingView notation.
-    Args:
-        tv_symbol (str): TradingView symbol, e.g. 'RELIANCE!'
-        kite (KiteConnect): KiteConnect API instance
-        exchange (str): Exchange, default 'NFO'
-    Returns:
-        List of dicts with 'tradingsymbol', 'expiry', 'lot_size'.
-    Raises:
-        Exception: If fetching instruments fails.
+    Uses global in-memory cache for instrument list per segment.
     """
     symbol = tv_symbol[:-1] if tv_symbol.endswith("!") else tv_symbol
-    if( symbol.endswith("1") or symbol.endswith("2") or symbol.endswith("3")):
+    if symbol.endswith("1") or symbol.endswith("2") or symbol.endswith("3"):
         symbol = symbol[:-1]
     try:
-        instruments = kite.instruments(exchange=exchange)
-        df = pd.DataFrame(instruments)
+        with INSTRUMENTS_CACHE_LOCK:
+            df = INSTRUMENTS_CACHE.get(exchange)
+            if df is None:
+                instruments = kite.instruments(exchange=exchange)
+                df = pd.DataFrame(instruments)
+                INSTRUMENTS_CACHE[exchange] = df
         fut_df = df[(df['instrument_type'] == 'FUT') & (df['name'] == symbol.upper())]
         if fut_df.empty:
             logger.warning(f"No futures contracts found for {symbol} on {exchange}")
