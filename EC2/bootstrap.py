@@ -20,51 +20,33 @@ eip_allocation_id = "eipalloc-000a4c982d826f568"
 user_data_script = """#!/bin/bash
 set -e
 
-# --- SSL CERTIFICATE S3 PERSISTENCE LOGIC ---
-BUCKET="sumitgoyalappxyz"  # <-- CHANGE THIS
-REGION="ap-south-1"           # <-- CHANGE THIS
-DOMAIN="sumitgoyalapp.xyz"     # <-- CHANGE THIS if needed
-EMAIL="goyalridhi83@gmail.com" # <-- CHANGE THIS if needed
-
-# Create S3 bucket if it doesn't exist (no error if it already exists)
-if ! aws s3api head-bucket --bucket "$BUCKET" 2>/dev/null; then
-    aws s3api create-bucket --bucket "$BUCKET" --region "$REGION" --create-bucket-configuration LocationConstraint="$REGION"
-fi
-
-# Try to restore certs from S3
-if aws s3 ls "s3://$BUCKET/letsencrypt/" 2>&1 | grep -q 'PRE'; then
-    echo "Restoring SSL certificates from S3..."
-    sudo mkdir -p /etc/letsencrypt
-    sudo aws s3 sync "s3://$BUCKET/letsencrypt/" /etc/letsencrypt/
-else
-    echo "No SSL backup found on S3, will issue new certificate."
-fi
-
-# Issue certificate only if not present
-if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-    sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$EMAIL" --redirect
-    # Backup new certs to S3
-    echo "Uploading new SSL certificates to S3..."
-    sudo aws s3 sync /etc/letsencrypt/ "s3://$BUCKET/letsencrypt/"
-else
-    echo "SSL certificate already present, skipping issuance."
-fi
-
-# --- END SSL CERTIFICATE S3 PERSISTENCE LOGIC ---
-
 # Define variables for domain and email
 DOMAIN="sumitgoyalapp.xyz"
 EMAIL="goyalridhi83@gmail.com"
+BUCKET="sumitgoyalappxyz"
+REGION="ap-south-1"
 REPO_DIR="/home/ec2-user/newrepo"
 
 # --- PACKAGE INSTALLATION ---
 dnf update -y
 dnf install -y git nginx python3 python3-pip
-
 rpm -ivh --nodeps https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
 
 # --- ADD SWAP SPACE TO PREVENT OOM KILL ---
-# Create and activate a 1GB swap file to provide extra memory
+fallocate -l 1G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+# --- END SWAP SPACE ADDITION ---
+
+# Now, install Certbot with the extra memory available
+dnf install -y certbot python3-certbot-nginx
+
+# --- CLEANUP SWAP ---
+swapoff /swapfile
+rm /swapfile
+# --- END CLEANUP ---
+
 fallocate -l 1G /swapfile
 chmod 600 /swapfile
 mkswap /swapfile
@@ -153,9 +135,29 @@ server {
 }
 EOF
 
-# Test Nginx configuration and request SSL certificate
+# Test Nginx configuration
 nginx -t
-certbot --nginx -d ${DOMAIN} --non-interactive --agree-tos -m ${EMAIL} --redirect
+
+# --- SSL CERTIFICATE S3 PERSISTENCE LOGIC ---
+# Try to restore certs from S3
+if aws s3 ls "s3://$BUCKET/letsencrypt/" 2>&1 | grep -q 'PRE'; then
+    echo "Restoring SSL certificates from S3..."
+    sudo mkdir -p /etc/letsencrypt
+    sudo aws s3 sync "s3://$BUCKET/letsencrypt/" /etc/letsencrypt/
+else
+    echo "No SSL backup found on S3, will issue new certificate."
+fi
+
+# Issue certificate only if not present
+if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+    sudo certbot --nginx --staging -d "$DOMAIN" --non-interactive --agree-tos -m "$EMAIL" --redirect
+    # Backup new certs to S3
+    echo "Uploading new SSL certificates to S3..."
+    sudo aws s3 sync /etc/letsencrypt/ "s3://$BUCKET/letsencrypt/"
+else
+    echo "SSL certificate already present, skipping issuance."
+fi
+# --- END SSL CERTIFICATE S3 PERSISTENCE LOGIC ---
 
 # Reload Nginx to apply the new SSL configuration from Certbot
 systemctl reload nginx
