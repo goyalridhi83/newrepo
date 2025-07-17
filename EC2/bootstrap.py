@@ -342,31 +342,36 @@ if __name__ == "__main__":
     detach_eip_if_associated()
     attach_eip(new_instance_id)
 
-    # --- Stream EC2 console output logs at the end ---
+    # --- Stream /var/log/cloud-init-output.log from the instance at the end ---
     import time
     import sys
-    import botocore
-    logger.info(f"Streaming EC2 instance {new_instance_id} console output logs after all steps...")
-    timeout = 600  # 10 minutes max
+    import paramiko
+    import socket
+    # Get public IP of the instance
+    desc = ec2_client.describe_instances(InstanceIds=[new_instance_id])
+    public_ip = desc['Reservations'][0]['Instances'][0]['PublicIpAddress']
+    logger.info(f"Attempting SSH to {public_ip} to stream /var/log/cloud-init-output.log ...")
+    key_path = f"~/.ssh/{key_name}.pem"  # Update path if your key is elsewhere
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    timeout = 600
     poll_interval = 10
     elapsed = 0
-    last_output = None
     while elapsed < timeout:
         try:
-            resp = ec2_client.get_console_output(InstanceId=new_instance_id, Latest=True)
-            output = resp.get('Output', '')
-            if output and output != last_output:
-                sys.stdout.write("\n--- EC2 Console Output ---\n")
-                sys.stdout.write(output + "\n")
-                sys.stdout.flush()
-                last_output = output
-        except botocore.exceptions.ClientError as e:
-            logger.warning(f"Error fetching console output: {e}")
-        # Check instance status
-        status_resp = ec2_client.describe_instance_status(InstanceIds=[new_instance_id])
-        statuses = status_resp.get('InstanceStatuses', [])
-        if statuses and statuses[0]['InstanceStatus']['Status'] == 'ok':
-            logger.info("Instance passed status checks. Stopping log stream.")
+            ssh.connect(public_ip, username='ec2-user', key_filename=os.path.expanduser(key_path), timeout=10)
+            logger.info("SSH connection established. Streaming cloud-init log:")
+            stdin, stdout, stderr = ssh.exec_command('sudo cat /var/log/cloud-init-output.log')
+            for line in stdout:
+                sys.stdout.write(line)
+            for line in stderr:
+                sys.stdout.write(line)
+            ssh.close()
             break
-        time.sleep(poll_interval)
-        elapsed += poll_interval
+        except (paramiko.ssh_exception.NoValidConnectionsError, socket.timeout, TimeoutError, paramiko.ssh_exception.SSHException) as e:
+            logger.info(f"Waiting for SSH: {e}")
+            time.sleep(poll_interval)
+            elapsed += poll_interval
+        except Exception as e:
+            logger.error(f"Unexpected SSH error: {e}")
+            break
