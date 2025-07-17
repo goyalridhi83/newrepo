@@ -99,6 +99,16 @@ EOF
 chown ec2-user:ec2-user ${REPO_DIR}/.env
 chmod 600 ${REPO_DIR}/.env
 
+# --- SSL CERTIFICATE S3 PERSISTENCE LOGIC ---
+# Try to restore certs from S3
+if aws s3 ls "s3://$BUCKET/letsencrypt/" 2>&1 | grep -q 'PRE'; then
+    echo "Restoring SSL certificates from S3..."
+    sudo mkdir -p /etc/letsencrypt
+    sudo aws s3 sync "s3://$BUCKET/letsencrypt/" /etc/letsencrypt/
+else
+    echo "No SSL backup found on S3, will issue new certificate."
+fi
+
 # Create systemd service for the FastAPI app
 cat <<EOF > /etc/systemd/system/fastapi-webhook.service
 [Unit]
@@ -146,15 +156,6 @@ EOF
 # Test Nginx configuration
 nginx -t
 
-# --- SSL CERTIFICATE S3 PERSISTENCE LOGIC ---
-# Try to restore certs from S3
-if aws s3 ls "s3://$BUCKET/letsencrypt/" 2>&1 | grep -q 'PRE'; then
-    echo "Restoring SSL certificates from S3..."
-    sudo mkdir -p /etc/letsencrypt
-    sudo aws s3 sync "s3://$BUCKET/letsencrypt/" /etc/letsencrypt/
-else
-    echo "No SSL backup found on S3, will issue new certificate."
-fi
 
 # Issue certificate only if not present
 if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
