@@ -5,3 +5,4 @@ python-dotenv
 kiteconnect
 python-multipart
 boto3
+paramiko
