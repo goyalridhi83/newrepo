@@ -229,14 +229,16 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
         app._processed_timestamps = set()
         app._timestamps_lock = threading.Lock()
     timestamp = payload.time
+    symbol = payload.symbol
     if not timestamp:
         logging.error("No timestamp provided in payload. Cannot ensure idempotency.")
         return JSONResponse(content={"status": "error", "message": "No timestamp in payload."}, status_code=400)
     with app._timestamps_lock:
-        if timestamp in app._processed_timestamps:
-            logging.info(f"Duplicate alert received for timestamp {timestamp}. Skipping processing.")
-            return JSONResponse(content={"status": "duplicate", "message": "Alert already processed."}, status_code=200)
-        app._processed_timestamps.add(timestamp)
+        key = (symbol, timestamp)
+        if key in app._processed_timestamps:
+            logging.info(f"Duplicate alert received for symbol {symbol} at timestamp {timestamp}. Skipping processing.")
+            return JSONResponse(content={"status": "duplicate", "message": "Alert already processed for this symbol and time."}, status_code=200)
+        app._processed_timestamps.add(key)
     try:
         # Convert payload.time (UTC) to IST for logging
         utc_time = None
