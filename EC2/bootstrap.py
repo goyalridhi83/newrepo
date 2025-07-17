@@ -185,8 +185,107 @@ def terminate_running_instances():
         logger.info("No running instances found.")
 
 # --- Step 2: Launch New EC2 Instance ---
+import botocore
+import json
+
+def ensure_iam_role_and_instance_profile():
+    iam = boto3.client('iam')
+    role_name = 'EC2S3SSLCertRole'
+    instance_profile_name = role_name + 'InstanceProfile'
+    policy_name = 'EC2S3SSLCertPolicy'
+    bucket_name = 'sumitgoyalappxyz'
+
+    trust_policy = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {"Service": "ec2.amazonaws.com"},
+                "Action": "sts:AssumeRole"
+            }
+        ]
+    }
+    policy_doc = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "s3:CreateBucket",
+                    "s3:ListBucket",
+                    "s3:GetObject",
+                    "s3:PutObject"
+                ],
+                "Resource": [
+                    f"arn:aws:s3:::{bucket_name}",
+                    f"arn:aws:s3:::{bucket_name}/*"
+                ]
+            }
+        ]
+    }
+    # Create role if not exists
+    try:
+        iam.get_role(RoleName=role_name)
+        print(f"Role {role_name} already exists.")
+    except iam.exceptions.NoSuchEntityException:
+        iam.create_role(
+            RoleName=role_name,
+            AssumeRolePolicyDocument=json.dumps(trust_policy),
+            Description="Role for EC2 to persist SSL certs to S3"
+        )
+        print(f"Created role {role_name}.")
+    # Create policy if not exists
+    # Find or create the policy in your account
+    policy_arn = None
+    paginator = iam.get_paginator('list_policies')
+    for page in paginator.paginate(Scope='Local'):
+        for pol in page['Policies']:
+            if pol['PolicyName'] == policy_name:
+                policy_arn = pol['Arn']
+                print(f"Policy {policy_name} already exists.")
+                break
+        if policy_arn:
+            break
+
+    if not policy_arn:
+        policy_response = iam.create_policy(
+            PolicyName=policy_name,
+            PolicyDocument=json.dumps(policy_doc)
+        )
+        policy_arn = policy_response['Policy']['Arn']
+        print(f"Created policy {policy_name}.")
+    # Attach the policy to the role
+    try:
+        iam.attach_role_policy(
+            RoleName=role_name,
+            PolicyArn=policy_arn
+        )
+    except Exception as e:
+        print(f"Policy already attached or error: {e}")
+    # Create instance profile if not exists
+    try:
+        iam.get_instance_profile(InstanceProfileName=instance_profile_name)
+    except iam.exceptions.NoSuchEntityException:
+        iam.create_instance_profile(InstanceProfileName=instance_profile_name)
+        iam.add_role_to_instance_profile(
+            InstanceProfileName=instance_profile_name,
+            RoleName=role_name
+        )
+        # Wait for propagation
+        import time
+        for _ in range(20):
+            try:
+                iam.get_instance_profile(InstanceProfileName=instance_profile_name)
+                break
+            except iam.exceptions.NoSuchEntityException:
+                time.sleep(3)
+        else:
+            raise Exception("Instance profile did not propagate in time.")
+    return instance_profile_name
+
 def launch_instance():
     logger.info("Launching new EC2 instance...")
+    instance_profile_name = ensure_iam_role_and_instance_profile()
     response = ec2_client.run_instances(
         ImageId=ami_id,
         InstanceType=instance_type,
@@ -195,6 +294,7 @@ def launch_instance():
         MaxCount=1,
         SecurityGroupIds=security_group_ids,
         SubnetId=subnet_id,
+        IamInstanceProfile={"Name": instance_profile_name},
         UserData=user_data_script,
         TagSpecifications=[
             {
