@@ -1,5 +1,6 @@
 import boto3
 import logging
+import os
 
 # --- Configure Logging ---
 logging.basicConfig(
@@ -125,7 +126,14 @@ cat <<EOF > /etc/nginx/conf.d/webhook.conf
 server {
     listen 80;
     server_name ${DOMAIN};
+    return 301 https://$host$request_uri;
+}
 
+server {
+    listen 443 ssl;
+    server_name ${DOMAIN};
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host \$host;
@@ -351,7 +359,7 @@ if __name__ == "__main__":
     desc = ec2_client.describe_instances(InstanceIds=[new_instance_id])
     public_ip = desc['Reservations'][0]['Instances'][0]['PublicIpAddress']
     logger.info(f"Attempting SSH to {public_ip} to stream /var/log/cloud-init-output.log ...")
-    key_path = f"~/.ssh/{key_name}.pem"  # Update path if your key is elsewhere
+    key_path = f"./key/{key_name}.pem"  # Update path if your key is elsewhere
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     timeout = 600
