@@ -327,11 +327,15 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
                 holdings = kite.holdings()
                 existing_position = next((h for h in holdings if h["tradingsymbol"] == tradingsymbol), None)
                 qty_held = existing_position["quantity"] if existing_position else 0
-                if(qty_held == 0):
+                t1_qty = existing_position["t1_quantity"] if existing_position and "t1_quantity" in existing_position else 0
+                if qty_held == 0 and t1_qty > 0:
+                    # Allow selling T1 quantity (BTST)
+                    qty_held = t1_qty
+                if qty_held == 0:
                     positions = kite.positions()["net"]
                     existing_position = next((p for p in positions if p["tradingsymbol"] == tradingsymbol and p["exchange"] == segment), None)
                     qty_held = existing_position["quantity"] if existing_position else 0
-                    
+
             else:
                 qty_held = 0
         except Exception as e:
