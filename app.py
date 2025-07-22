@@ -15,8 +15,6 @@ from dotenv import load_dotenv
 import pytz
 from dateutil import parser as dtparser
 
-# File lock for cache updates
-active_contracts_lock = threading.Lock()
 
 # Load environment variables
 load_dotenv()
@@ -25,7 +23,6 @@ load_dotenv()
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 REQUEST_TOKEN_FILE = os.getenv("REQUEST_TOKEN_PATH", "request_token.txt")
 ACCESS_TOKEN_FILE = os.getenv("ACCESS_TOKEN_PATH", "access_token.txt")
-ACTIVE_CONTRACTS_FILE = os.getenv("ACTIVE_CONTRACTS_PATH", "cache/active_contracts.json")
 API_SECRET = os.getenv("KITE_API_SECRET")
 API_KEY = os.getenv("KITE_API_KEY")
 
@@ -88,18 +85,30 @@ async def lifespan(app: FastAPI):
                             logging.error(f"Failed to refresh instrument cache for {seg}: {e}")
                 # --- Rollover logic starts here ---
                 today = datetime.now().date()
-                if not os.path.exists(ACTIVE_CONTRACTS_FILE):
-                    os.makedirs(os.path.dirname(ACTIVE_CONTRACTS_FILE), exist_ok=True)
-                    with open(ACTIVE_CONTRACTS_FILE, "w") as f:
-                        json.dump({}, f)
-                with active_contracts_lock:
-                    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
-                        active_map = json.load(f)
+                # Get unique base symbols from current NFO and MCX positions
                 positions = kite.positions()["net"]
-                for sym in list(active_map):
-                    contracts = get_top_3_futures_from_tv_symbol(sym + "!", kite, 'NFO')
+                # Filter for NFO and MCX positions and extract base symbols
+                tracked_symbols = {}
+                for pos in positions:
+                    if pos["exchange"] in ["NFO", "MCX"] and pos["product"] == "NRML":
+                        # Extract and clean the symbol (e.g., 'COPPER25JULFUT' -> 'COPPER')
+                        full_symbol = pos["tradingsymbol"]
+                        # Take the part before any hyphen
+                        symbol_part = full_symbol.split('-')[0]
+                        # Take characters until the first digit is found
+                        base_symbol = ''
+                        for char in symbol_part:
+                            if char.isdigit():
+                                break
+                            base_symbol += char
+                        tracked_symbols[base_symbol] = full_symbol  # Store original symbol for reference
+                
+                logging.info(f"Tracking symbols for rollover: {list(tracked_symbols.keys())}")
+                
+                for base_symbol, original_symbol in sorted(tracked_symbols.items()):  # Sort for consistent processing order
+                    contracts = get_top_3_futures_from_tv_symbol(base_symbol + "!", kite, 'NFO')
                     if len(contracts) < 2:
-                        contracts = get_top_3_futures_from_tv_symbol(sym + "!", kite, 'MCX')
+                        contracts = get_top_3_futures_from_tv_symbol(base_symbol + "!", kite, 'MCX')
                         if len(contracts) < 2:
                             continue
                     current_contract = contracts[0]
@@ -118,20 +127,16 @@ async def lifespan(app: FastAPI):
                         qty_held = existing_position["quantity"] if existing_position else 0
                         if qty_held > 0:
                             segment = existing_position["exchange"]
-                            order_id, error = place_order(kite, current_symbol, "sell", 0, segment, quantity=qty_held)
+                            #order_id, error = place_order(kite, current_symbol, "sell", 0, segment, quantity=qty_held)
                             if order_id:
-                                order_id, error = place_order(kite, next_symbol, "buy", 0, segment, quantity=qty_held)
+                                #order_id, error = place_order(kite, next_symbol, "buy", 0, segment, quantity=qty_held)
                                 if order_id:
-                                    logging.info(f"✅ Rolled over {sym} from {current_symbol} to {next_symbol}")
-                                    active_map[sym.upper()] = next_symbol
+                                    logging.info(f"✅ Rolled over {base_symbol} from {current_symbol} to {next_symbol}")
                                 else:
-                                    logging.error(f"❌ Failed to BUY roll over(BUY LEG FAILED) {sym} from {current_symbol} to {next_symbol}")
+                                    logging.error(f"❌ Failed to BUY roll over (BUY LEG FAILED) {base_symbol} from {current_symbol} to {next_symbol}")
                             else:
-                                logging.error(f"❌ Failed to SELL roll over(SELL LEG FAILED) {sym} from {current_symbol} to {next_symbol}")
-                with active_contracts_lock:
-                    with open(ACTIVE_CONTRACTS_FILE, "w") as f:
-                        json.dump(active_map, f)
-                logging.info("Active contracts updated during rollover check.")
+                                logging.error(f"❌ Failed to SELL roll over (SELL LEG FAILED) {base_symbol} from {current_symbol} to {next_symbol}")
+                logging.info("Rollover check completed. No state is persisted between runs.")
             except Exception as e:
                 logging.exception("Rollover scheduler failed")
             # Loop will recalculate next 9:25 AM on next iteration
@@ -221,30 +226,6 @@ def save_and_refresh_token(token: str = Form(...)) -> HTMLResponse:
         return HTMLResponse(content=f"<b>Error:</b> {str(e)}", status_code=500)
 
 
-
-def update_active_contract(active_symbol, tradingsymbol, action, quantity=None):
-    """
-    Thread-safe update or removal of the active contracts file.
-    - On 'buy': add/update the entry.
-    - On 'sell': if quantity==0, remove the entry.
-    """
-    try:
-        with active_contracts_lock:
-            if not os.path.exists(ACTIVE_CONTRACTS_FILE):
-                os.makedirs(os.path.dirname(ACTIVE_CONTRACTS_FILE), exist_ok=True)
-                with open(ACTIVE_CONTRACTS_FILE, "w") as f:
-                    json.dump({}, f)
-            with open(ACTIVE_CONTRACTS_FILE, "r") as f:
-                active_map = json.load(f)
-            symbol_key = active_symbol.upper()
-            if action == "buy":
-                active_map[symbol_key] = tradingsymbol
-                logging.info(f"Updated active contract for {active_symbol} to {tradingsymbol}")
-            with open(ACTIVE_CONTRACTS_FILE, "w") as f:
-                json.dump(active_map, f)
-    except Exception as e:
-        logging.error(f"Failed to update active contracts: {e}")
-
 @app.post("/webhook", response_model=None)
 async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONResponse:
     """Webhook endpoint for trading signals."""
@@ -300,44 +281,38 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
             if( active_symbol.endswith("1") or active_symbol.endswith("2") or active_symbol.endswith("3")):
                 active_symbol = active_symbol[:-1]
             try:
-                with active_contracts_lock:
-                    if not os.path.exists(ACTIVE_CONTRACTS_FILE):
-                        os.makedirs(os.path.dirname(ACTIVE_CONTRACTS_FILE), exist_ok=True)
-                        with open(ACTIVE_CONTRACTS_FILE, "w") as f:
-                            json.dump({}, f)
-                    with open(ACTIVE_CONTRACTS_FILE, "r") as f:
-                        active_map = json.load(f)
-                tradingsymbol = active_map.get(active_symbol.upper())
-                if not tradingsymbol:
-                    contracts = get_top_3_futures_from_tv_symbol(tv_symbol, kite, segment)
-                    if not contracts:
-                        raise HTTPException(status_code=404, detail=f"No futures contracts found for {tv_symbol}")
-                    # Enhanced logic: select next contract if expiry is within 7 days
-                    expiry_str = contracts[0].get('expiry')
-                    next_tradingsymbol = None
-                    if expiry_str:
-                        # expiry could be a datetime or string, handle both
-                        from datetime import datetime, timedelta
-                        if isinstance(expiry_str, str):
-                            try:
-                                expiry_date = datetime.strptime(expiry_str, "%Y-%m-%d")
-                            except ValueError:
-                                # fallback for possible datetime format
-                                expiry_date = datetime.fromisoformat(expiry_str)
-                        else:
-                            expiry_date = expiry_str
-                        today = datetime.now().date()
-                        days_left = (expiry_date - today).days
-                        if 0 < days_left <= 7 and today.weekday() < 5:
-                            if len(contracts) > 1:
-                                next_tradingsymbol = contracts[1]['tradingsymbol']
-                            else:
-                                next_tradingsymbol = contracts[0]['tradingsymbol']
-                        else:
-                            next_tradingsymbol = contracts[0]['tradingsymbol']
+                # Always select contract dynamically
+                contracts = get_top_3_futures_from_tv_symbol(tv_symbol, kite, segment)
+                if not contracts:
+                    raise HTTPException(status_code=404, detail=f"No futures contracts found for {tv_symbol}")
+                
+                # Enhanced logic: select next contract if expiry is within 7 days
+                expiry_str = contracts[0].get('expiry')
+                next_tradingsymbol = None
+                
+                if expiry_str:
+                    # expiry could be a datetime or string, handle both
+                    from datetime import datetime, timedelta
+                    if isinstance(expiry_str, str):
+                        try:
+                            expiry_date = datetime.strptime(expiry_str, "%Y-%m-%d")
+                        except ValueError:
+                            # fallback for possible datetime format
+                            expiry_date = datetime.fromisoformat(expiry_str)
+                    else:
+                        expiry_date = expiry_str
+                    
+                    today = datetime.now().date()
+                    days_left = (expiry_date.date() - today).days if hasattr(expiry_date, 'date') else (expiry_date - today).days
+                    
+                    if 0 < days_left <= 7 and today.weekday() < 5:
+                        next_tradingsymbol = contracts[1]['tradingsymbol'] if len(contracts) > 1 else contracts[0]['tradingsymbol']
                     else:
                         next_tradingsymbol = contracts[0]['tradingsymbol']
-                    tradingsymbol = next_tradingsymbol
+                else:
+                    next_tradingsymbol = contracts[0]['tradingsymbol']
+                
+                tradingsymbol = next_tradingsymbol
             except Exception as e:
                 logging.error(f"Error fetching active contract: {e}")
                 raise HTTPException(status_code=500, detail=f"Error fetching active contract: {e}")
@@ -366,16 +341,28 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
         except Exception as e:
             logging.error(f"Error fetching positions/holdings: {e}")
             raise HTTPException(status_code=500, detail=f"Error fetching positions/holdings: {e}")
+        # Get lot size for futures contracts
+        lot_size = 1  # Default lot size for non-futures
+        if segment in ["NFO", "MCX"]:
+            # Find the contract to get its lot size
+            contracts = get_top_3_futures_from_tv_symbol(tv_symbol, kite, segment)
+            if contracts:
+                lot_size = contracts[0].get('lot_size', 1)
+            
+            # Calculate total quantity (lots * lot_size)
+            total_quantity = int(quantity * lot_size)
+        else:
+            total_quantity = quantity
+            
         if action == "buy":
             if qty_held > 0:
                 logging.info(f"Already holding {tradingsymbol}. Skipping buy.")
                 return JSONResponse(content={"status": "already holding, buy skipped"}, status_code=200)
             else:
-                order_id, error = place_order(kite, tradingsymbol, action, price, segment, quantity)
+                order_id, error = place_order(kite, tradingsymbol, action, price, segment, total_quantity)
                 if order_id:
-                    if(segment == "NFO" or segment == "MCX"):
-                        update_active_contract(active_symbol, tradingsymbol, action="buy")
-                    return JSONResponse(content={"status": "buy order placed", "order_id": order_id}, status_code=200)
+                    logging.info(f"Buy order placed for {total_quantity} units of {tradingsymbol} (lot size: {lot_size})")
+                    return JSONResponse(content={"status": "buy order placed", "order_id": order_id, "quantity": total_quantity}, status_code=200)
                 elif error:
                     logging.error(f"Buy order failed: {error}")
                     return JSONResponse(content={"status": "buy order failed", "error": error}, status_code=200)
@@ -384,9 +371,12 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
                 logging.info(f"No holdings for {tradingsymbol}. Skipping sell.")
                 return JSONResponse(content={"status": "no holdings, sell skipped"}, status_code=200)
             else:
-                order_id, error = place_order(kite, tradingsymbol, action, price, segment, quantity)
+                # For selling, use the actual quantity held
+                sell_quantity = min(total_quantity, abs(qty_held)) if qty_held > 0 else total_quantity
+                order_id, error = place_order(kite, tradingsymbol, action, price, segment, sell_quantity)
                 if order_id:
-                    return JSONResponse(content={"status": "sell order placed", "order_id": order_id}, status_code=200)
+                    logging.info(f"Sell order placed for {sell_quantity} units of {tradingsymbol}")
+                    return JSONResponse(content={"status": "sell order placed", "order_id": order_id, "quantity": sell_quantity}, status_code=200)
                 elif error:
                     logging.error(f"Sell order failed: {error}")
                     return JSONResponse(content={"status": "sell order failed", "error": error}, status_code=200)
