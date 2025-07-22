@@ -6,3 +6,6 @@ kiteconnect
 python-multipart
 boto3
 paramiko
+redis
+pytest
+pytest-mock
