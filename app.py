@@ -312,7 +312,32 @@ async def webhook(payload: WebhookPayload, token: str = Query(...)) -> JSONRespo
                     contracts = get_top_3_futures_from_tv_symbol(tv_symbol, kite, segment)
                     if not contracts:
                         raise HTTPException(status_code=404, detail=f"No futures contracts found for {tv_symbol}")
-                    tradingsymbol = contracts[0]['tradingsymbol']
+                    # Enhanced logic: select next contract if expiry is within 7 days
+                    expiry_str = contracts[0].get('expiry')
+                    next_tradingsymbol = None
+                    if expiry_str:
+                        # expiry could be a datetime or string, handle both
+                        from datetime import datetime, timedelta
+                        if isinstance(expiry_str, str):
+                            try:
+                                expiry_date = datetime.strptime(expiry_str, "%Y-%m-%d")
+                            except ValueError:
+                                # fallback for possible datetime format
+                                expiry_date = datetime.fromisoformat(expiry_str)
+                        else:
+                            expiry_date = expiry_str
+                        today = datetime.now().date()
+                        days_left = (expiry_date - today).days
+                        if 0 < days_left <= 7 and today.weekday() < 5:
+                            if len(contracts) > 1:
+                                next_tradingsymbol = contracts[1]['tradingsymbol']
+                            else:
+                                next_tradingsymbol = contracts[0]['tradingsymbol']
+                        else:
+                            next_tradingsymbol = contracts[0]['tradingsymbol']
+                    else:
+                        next_tradingsymbol = contracts[0]['tradingsymbol']
+                    tradingsymbol = next_tradingsymbol
             except Exception as e:
                 logging.error(f"Error fetching active contract: {e}")
                 raise HTTPException(status_code=500, detail=f"Error fetching active contract: {e}")
