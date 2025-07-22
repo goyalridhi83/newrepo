@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import logging
 import io
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ def set_instrument_cache(segment: str, instruments_df: pd.DataFrame):
         logger.error(f"Failed to set instrument cache for {segment} in Redis: {e}")
 
 
-def get_instrument_cache(segment: str) -> pd.DataFrame | None:
+def get_instrument_cache(segment: str) -> Optional[pd.DataFrame]:
     """Retrieves and deserializes a DataFrame from Redis."""
     key = f"instrument_cache:{segment}"
     try:

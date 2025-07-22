@@ -1,6 +1,12 @@
 import boto3
 import logging
 import os
+import botocore
+import json
+import time
+import sys
+import paramiko
+import socket
 
 # --- Configure Logging ---
 logging.basicConfig(
@@ -19,9 +25,20 @@ subnet_id = "subnet-0c21652e5bde06a58"
 eip_allocation_id = "eipalloc-000a4c982d826f568"
 
 user_data_script = """#!/bin/bash
-set -e
+set -euo pipefail
+
+# Redirect all output to a log file for debugging
+exec > >(tee -a /var/log/bootstrap.log) 2>&1
+
+# --- ADD SWAP SPACE TO PREVENT OOM KILL ---
+echo "Creating swap space..."
+fallocate -l 1G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
 
 # Define variables for domain and email
+echo "Setting up environment variables..."
 DOMAIN="sumitgoyalapp.xyz"
 EMAIL="goyalridhi83@gmail.com"
 BUCKET="sumitgoyalappxyz"
@@ -29,79 +46,64 @@ REGION="ap-south-1"
 REPO_DIR="/home/ec2-user/newrepo"
 
 # --- PACKAGE INSTALLATION ---
+echo "Updating system and installing packages..."
 dnf update -y
 dnf install -y git nginx python3 python3-pip
 rpm -ivh --nodeps https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
 
-# --- ADD SWAP SPACE TO PREVENT OOM KILL ---
-fallocate -l 1G /swapfile
-chmod 600 /swapfile
-mkswap /swapfile
-swapon /swapfile
-# --- END SWAP SPACE ADDITION ---
+# --- ENABLE AND START REDIS (via Docker) ---
+echo "Installing Docker..."
+dnf install -y docker
+systemctl enable docker
+systemctl start docker
 
-# Now, install Certbot with the extra memory available
+echo "Running Redis container..."
+docker run -d --name redis-server -p 6379:6379 redis:alpine
+
+echo "Installing Certbot..."
 dnf install -y certbot python3-certbot-nginx
 
-# --- CLEANUP SWAP ---
+echo "Cleaning up swap space..."
 swapoff /swapfile
 rm /swapfile
-# --- END CLEANUP ---
-
-fallocate -l 1G /swapfile
-chmod 600 /swapfile
-mkswap /swapfile
-swapon /swapfile
-# --- END SWAP SPACE ADDITION ---
-
-# Now, install Certbot with the extra memory available
-dnf install -y certbot python3-certbot-nginx
-
-# --- CLEANUP SWAP ---
-# Deactivate and remove the swap file now that it's no longer needed
-swapoff /swapfile
-rm /swapfile
-# --- END CLEANUP ---
 
 # --- APPLICATION SETUP ---
-# Enable and start Nginx
+echo "Enabling and starting Nginx..."
 systemctl enable nginx
 systemctl start nginx
 
-# Clone your public GitHub repo
+echo "Cloning GitHub repo..."
 cd /home/ec2-user
 git clone https://github.com/goyalridhi83/newrepo.git
 cd newrepo
 git checkout main_aws
 
-# Set permissions for the entire repo directory
+echo "Setting permissions for repo directory..."
 chown -R ec2-user:ec2-user ${REPO_DIR}
 
-# Install Python dependencies
+echo "Installing Python dependencies..."
 sudo -u ec2-user pip3 install --upgrade pip
 sudo -u ec2-user pip3 install -r requirements.txt
 
-# Make log file writable
+echo "Making log file writable..."
 touch ${REPO_DIR}/stock_scanner.log
 chmod 664 ${REPO_DIR}/stock_scanner.log
 
-# Create and load .env file
+echo "Creating .env file..."
 cat <<EOF > ${REPO_DIR}/.env
 WEBHOOK_SECRET=xanvestatechsecret
-KITE_API_KEY=wt1b63ihts1q60wt
-KITE_API_SECRET=rhl5o9yydobp4hfpmgl3lx9kkotnyk0t
+KITE_API_KEY=0i4egr11rkdsctvb
+KITE_API_SECRET=d4tb1ele7hfg51a6i8jbxnysi8zkpesf
 REQUEST_TOKEN_PATH=request_token.txt
 ACCESS_TOKEN_PATH=access_token.txt
 ACTIVE_CONTRACTS_PATH=cache/active_contracts.json
 EOF
 
-# Change the owner of the .env file to ec2-user so the service can read it
 chown ec2-user:ec2-user ${REPO_DIR}/.env
 chmod 600 ${REPO_DIR}/.env
 
-# --- SSL CERTIFICATE S3 PERSISTENCE LOGIC ---
-# Try to restore certs from S3
-if aws s3 ls "s3://$BUCKET/letsencrypt/" 2>&1 | grep -q 'PRE'; then
+echo "Restoring SSL certificates from S3 if available..."
+if aws s3 ls "s3://$BUCKET/letsencrypt/live/sumitgoyalapp.xyz/fullchain.pem" 2>&1 | grep -q 'fullchain.pem'; then
     echo "Restoring SSL certificates from S3..."
     sudo mkdir -p /etc/letsencrypt
     sudo aws s3 sync "s3://$BUCKET/letsencrypt/" /etc/letsencrypt/
@@ -109,7 +111,7 @@ else
     echo "No SSL backup found on S3, will issue new certificate."
 fi
 
-# Create systemd service for the FastAPI app
+echo "Creating systemd service for FastAPI app..."
 cat <<EOF > /etc/systemd/system/fastapi-webhook.service
 [Unit]
 Description=FastAPI Webhook Service
@@ -126,17 +128,16 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-# Reload systemd and start the FastAPI service
 systemctl daemon-reload
 systemctl enable fastapi-webhook
 systemctl start fastapi-webhook
 
-# Configure Nginx as a reverse proxy for HTTP
+echo "Configuring Nginx as a reverse proxy..."
 cat <<EOF > /etc/nginx/conf.d/webhook.conf
 server {
     listen 80;
     server_name ${DOMAIN};
-    return 301 https://$host$request_uri;
+    return 301 https://\$host\$request_uri;
 }
 
 server {
@@ -144,6 +145,7 @@ server {
     server_name ${DOMAIN};
     ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host \$host;
@@ -153,22 +155,20 @@ server {
 }
 EOF
 
-# Test Nginx configuration
-nginx -t
-
-
-# Issue certificate only if not present
+echo "Issuing SSL certificate if not present..."
 if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+    echo "Requesting SSL cert via Certbot..."
     sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$EMAIL" --redirect
-    # Backup new certs to S3
     echo "Uploading new SSL certificates to S3..."
     sudo aws s3 sync /etc/letsencrypt/ "s3://$BUCKET/letsencrypt/"
 else
     echo "SSL certificate already present, skipping issuance."
 fi
-# --- END SSL CERTIFICATE S3 PERSISTENCE LOGIC ---
 
-# Reload Nginx to apply the new SSL configuration from Certbot
+echo "Testing Nginx configuration..."
+nginx -t
+
+echo "Reloading Nginx to apply SSL configuration..."
 systemctl reload nginx
 """
 
@@ -196,15 +196,17 @@ def terminate_running_instances():
         logger.info("No running instances found.")
 
 # --- Step 2: Launch New EC2 Instance ---
-import botocore
-import json
-
 def ensure_iam_role_and_instance_profile():
     iam = boto3.client('iam')
     role_name = 'EC2S3SSLCertRole'
     instance_profile_name = role_name + 'InstanceProfile'
     policy_name = 'EC2S3SSLCertPolicy'
     bucket_name = 'sumitgoyalappxyz'
+
+    # Get Account ID for constructing the ARN
+    sts = boto3.client('sts')
+    account_id = sts.get_caller_identity().get('Account')
+    policy_arn = f'arn:aws:iam::{account_id}:policy/{policy_name}'
 
     trust_policy = {
         "Version": "2012-10-17",
@@ -245,26 +247,19 @@ def ensure_iam_role_and_instance_profile():
             Description="Role for EC2 to persist SSL certs to S3"
         )
         print(f"Created role {role_name}.")
-    # Create policy if not exists
-    # Find or create the policy in your account
-    policy_arn = None
-    paginator = iam.get_paginator('list_policies')
-    for page in paginator.paginate(Scope='Local'):
-        for pol in page['Policies']:
-            if pol['PolicyName'] == policy_name:
-                policy_arn = pol['Arn']
-                print(f"Policy {policy_name} already exists.")
-                break
-        if policy_arn:
-            break
-
-    if not policy_arn:
-        policy_response = iam.create_policy(
+    
+    # Check for policy existence directly using its ARN
+    try:
+        iam.get_policy(PolicyArn=policy_arn)
+        print(f"Policy {policy_name} already exists.")
+    except iam.exceptions.NoSuchEntityException:
+        print(f"Policy {policy_name} not found, creating it.")
+        iam.create_policy(
             PolicyName=policy_name,
             PolicyDocument=json.dumps(policy_doc)
         )
-        policy_arn = policy_response['Policy']['Arn']
         print(f"Created policy {policy_name}.")
+
     # Attach the policy to the role
     try:
         iam.attach_role_policy(
@@ -283,7 +278,6 @@ def ensure_iam_role_and_instance_profile():
             RoleName=role_name
         )
         # Wait for propagation
-        import time
         for _ in range(20):
             try:
                 iam.get_instance_profile(InstanceProfileName=instance_profile_name)
@@ -352,10 +346,6 @@ if __name__ == "__main__":
     attach_eip(new_instance_id)
 
     # --- Stream /var/log/cloud-init-output.log from the instance at the end ---
-    import time
-    import sys
-    import paramiko
-    import socket
     # Get public IP of the instance
     desc = ec2_client.describe_instances(InstanceIds=[new_instance_id])
     public_ip = desc['Reservations'][0]['Instances'][0]['PublicIpAddress']
