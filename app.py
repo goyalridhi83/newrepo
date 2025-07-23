@@ -372,6 +372,8 @@ def token_form_account(account_num: int) -> HTMLResponse:
 @app.post("/token/{account_num}")
 def save_and_refresh_token_account(account_num: int, token: str = Form(...)) -> HTMLResponse:
     """Save and refresh Zerodha access token for a specific account, and validate it."""
+    global kite1, kite2  # Access global kite objects
+    
     try:
         api_key, api_secret, access_token_file = get_account_credentials(account_num)
         from kiteconnect import KiteConnect
@@ -379,12 +381,23 @@ def save_and_refresh_token_account(account_num: int, token: str = Form(...)) -> 
         access_token = kite.generate_session(token, api_secret=api_secret)["access_token"]
         with open(access_token_file, "w") as f:
             f.write(access_token)
+        
         # Validate token by making a simple API call
         try:
             kite.set_access_token(access_token)
             profile = kite.profile()  # Will raise if invalid
+            
+            # ✅ UPDATE GLOBAL KITE OBJECTS WITH NEW ACCESS TOKEN
+            if account_num == 1:
+                kite1.set_access_token(access_token)
+                logging.info(f"✅ Global kite1 object updated with new access token for account {account_num}")
+            elif account_num == 2:
+                kite2.set_access_token(access_token)
+                logging.info(f"✅ Global kite2 object updated with new access token for account {account_num}")
+            
             logging.info(f"Access token validated and saved successfully for account {account_num}.")
-            return HTMLResponse(content="<b>Token is valid! Login successful.</b>", status_code=200)
+            user_info = f"User: {profile.get('user_name', 'N/A')} ({profile.get('user_id', 'N/A')})"
+            return HTMLResponse(content=f"<b>Token is valid! Login successful.</b><br>{user_info}<br>Account {account_num} is now ready for trading.", status_code=200)
         except Exception as ve:
             logging.error(f"Token saved but validation failed for account {account_num}: {ve}")
             return HTMLResponse(content=f"<b>Invalid token:</b> An internal error occurred. Please check the server logs.", status_code=400)
