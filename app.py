@@ -235,9 +235,9 @@ async def lifespan(app: FastAPI):
 
                         if qty_held > 0:
                             segment = existing_position["exchange"]
-                            order_id, error = place_order(kite, current_symbol, "sell", 0, segment, quantity=qty_held)
+                            #order_id, error = place_order(kite, current_symbol, "sell", 0, segment, quantity=qty_held)
                             if order_id:
-                                order_id2, error2 = place_order(kite, next_symbol, "buy", 0, segment, quantity=qty_held)
+                                #order_id2, error2 = place_order(kite, next_symbol, "buy", 0, segment, quantity=qty_held)
                                 if order_id2:
                                     logging.info(f"✅ {account_name} Rolled over {base_symbol} from {current_symbol} to {next_symbol}")
                                 else:
