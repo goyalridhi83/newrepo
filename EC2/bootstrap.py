@@ -92,11 +92,15 @@ chmod 664 ${REPO_DIR}/stock_scanner.log
 echo "Creating .env file..."
 cat <<EOF > ${REPO_DIR}/.env
 WEBHOOK_SECRET=xanvestatechsecret
-KITE_API_KEY=0i4egr11rkdsctvb
-KITE_API_SECRET=d4tb1ele7hfg51a6i8jbxnysi8zkpesf
-REQUEST_TOKEN_PATH=request_token.txt
-ACCESS_TOKEN_PATH=access_token.txt
-ACTIVE_CONTRACTS_PATH=cache/active_contracts.json
+
+# --- Dual account support ---
+KITE_API_KEY_1=0i4egr11rkdsctvb
+KITE_API_SECRET_1=d4tb1ele7hfg51a6i8jbxnysi8zkpesf
+ACCESS_TOKEN_PATH_1=access_token1.txt
+
+KITE_API_KEY_2=wt1b63ihts1q60wt
+KITE_API_SECRET_2=rhl5o9yydobp4hfpmgl3lx9kkotnyk0t
+ACCESS_TOKEN_PATH_2=access_token2.txt
 EOF
 
 chown ec2-user:ec2-user ${REPO_DIR}/.env

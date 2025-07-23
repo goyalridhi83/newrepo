@@ -9,3 +9,5 @@ paramiko
 redis
 pytest
 pytest-mock
+psutil
+pytz

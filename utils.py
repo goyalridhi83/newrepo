@@ -11,7 +11,6 @@ load_dotenv()
 
 API_KEY = os.getenv("KITE_API_KEY")
 API_SECRET = os.getenv("KITE_API_SECRET")
-REQUEST_TOKEN_PATH = os.getenv("REQUEST_TOKEN_PATH", "request_token.txt")
 ACCESS_TOKEN_PATH = os.getenv("ACCESS_TOKEN_PATH", "access_token.txt")
 
 logger = logging.getLogger(__name__)
@@ -45,6 +44,34 @@ def zerodha_login(
             logger.warning(f"Stored access token invalid: {e}. Returning kite without setting access token.")
             return kite  # Return the Kite object without access token
     return kite  # Return without access token set
+
+def zerodha_login_multi():
+    """
+    Login to two Zerodha accounts using environment variables for each account's credentials.
+    Returns two KiteConnect instances (kite1, kite2).
+    """
+    from kiteconnect import KiteConnect
+    import os
+
+    # Account 1
+    api_key_1 = os.getenv("KITE_API_KEY_1")
+    api_secret_1 = os.getenv("KITE_API_SECRET_1")
+    access_token_path_1 = os.getenv("ACCESS_TOKEN_PATH_1", "access_token1.txt")
+    kite1 = KiteConnect(api_key=api_key_1)
+    if os.path.exists(access_token_path_1):
+        with open(access_token_path_1, "r") as f:
+            kite1.set_access_token(f.read().strip())
+
+    # Account 2
+    api_key_2 = os.getenv("KITE_API_KEY_2")
+    api_secret_2 = os.getenv("KITE_API_SECRET_2")
+    access_token_path_2 = os.getenv("ACCESS_TOKEN_PATH_2", "access_token2.txt")
+    kite2 = KiteConnect(api_key=api_key_2)
+    if os.path.exists(access_token_path_2):
+        with open(access_token_path_2, "r") as f:
+            kite2.set_access_token(f.read().strip())
+
+    return kite1, kite2
 
 def fetch_latest_data(
     kite: KiteConnect,

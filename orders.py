@@ -4,6 +4,7 @@ from typing import List, Dict, Any, Tuple, Optional
 import pandas as pd
 
 from redis_utils import get_instrument_cache, set_instrument_cache
+from memory_manager import cleanup_dataframes
 
 logger = logging.getLogger(__name__)
 
@@ -25,26 +26,36 @@ def get_top_3_futures_from_tv_symbol(tv_symbol: str, kite: KiteConnect, exchange
             instruments = kite.instruments(exchange=exchange)
             df = pd.DataFrame(instruments)
             set_instrument_cache(exchange, df)
+            # Note: df will be cleaned up in the finally block below
 
         fut_df = df[(df['instrument_type'] == 'FUT') & (df['name'] == symbol.upper())]
         
         if fut_df.empty:
             logger.warning(f"No futures contracts found for {symbol} on {exchange}")
+            cleanup_dataframes(fut_df)
             return []
 
         fut_df_sorted = fut_df.sort_values('expiry').head(3)
         
         contracts = []
-        for _, row in fut_df_sorted.iterrows():
-            contracts.append({
-                "tradingsymbol": row["tradingsymbol"],
-                "expiry": row["expiry"],
-                "lot_size": row["lot_size"]
-            })
-        return contracts
+        try:
+            for _, row in fut_df_sorted.iterrows():
+                contracts.append({
+                    "tradingsymbol": row["tradingsymbol"],
+                    "expiry": row["expiry"],
+                    "lot_size": row["lot_size"]
+                })
+            return contracts
+        finally:
+            # Clean up DataFrames to prevent memory leaks
+            cleanup_dataframes(fut_df, fut_df_sorted)
     except Exception as e:
         logger.error(f"Error fetching futures contracts: {e}", exc_info=True)
         return []
+    finally:
+        # Clean up the main DataFrame if it exists
+        if 'df' in locals() and df is not None:
+            cleanup_dataframes(df)
 
 
 def place_order(
@@ -88,7 +99,7 @@ def place_order(
             "product": product_type,
             "variety": kite.VARIETY_REGULAR
         }
-        order_id = kite.place_order(**order_params)
+        #order_id = kite.place_order(**order_params)
         logger.info(f"✅ {action.upper()} order placed for {tradingsymbol}. Order ID: {order_id}")
         return (order_id, None)
     except Exception as e:
