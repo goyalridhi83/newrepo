@@ -116,7 +116,7 @@ def place_order(
             "product": product_type,
             "variety": kite.VARIETY_REGULAR
         }
-        #order_id = kite.place_order(**order_params)
+        order_id = kite.place_order(**order_params)
         logger.info(f"✅ {action.upper()} order placed for {tradingsymbol}. Order ID: {order_id}")
         return (order_id, None)
     except Exception as e:
