@@ -14,6 +14,12 @@ from dotenv import load_dotenv
 from memory_manager import memory_manager, cleanup_dataframes, force_gc
 from logging_config import setup_logging
 from redis_utils import get_instrument_cache, set_instrument_cache, is_duplicate
+from dataframe_utils import (
+    SafeDataFrameOperations, 
+    dataframe_operation_context,
+    df_memory_tracker,
+    cleanup_large_dataframes
+)
 import pytz
 from dateutil import parser as dtparser
 import json
@@ -156,24 +162,30 @@ async def lifespan(app: FastAPI):
 
                 # --- Refresh instrument cache and create lookups (using kite1 only) ---
                 instrument_lookups = {}
-                df_cache = {}  # Store DataFrames for cleanup
-                try:
+                
+                # Use DataFrame context manager for automatic cleanup
+                with memory_manager.create_dataframe_context() as df_ctx:
                     for seg in segments:
                         try:
                             df = get_instrument_cache(seg)
                             if df is not None:
-                                df_cache[seg] = df  # Store for cleanup
-                                instrument_lookups[seg] = df.set_index('tradingsymbol')['name'].to_dict()
-                                logging.info(f"{account_name} loaded instrument lookup for segment {seg}")
+                                # Track DataFrame for automatic cleanup
+                                df_ctx.track(df)
+                                
+                                # Create lookup dictionary from DataFrame
+                                df_indexed = df.set_index('tradingsymbol')
+                                df_ctx.track(df_indexed)  # Track indexed DataFrame too
+                                
+                                instrument_lookups[seg] = df_indexed['name'].to_dict()
+                                logging.info(f"{account_name} loaded instrument lookup for segment {seg} ({len(instrument_lookups[seg])} instruments)")
                             else:
                                 logging.warning(f"{account_name} instrument cache missing for segment {seg}")
                         except Exception as e:
                             logging.error(f"{account_name} failed to load instrument cache for {seg}: {e}", exc_info=True)
-                finally:
-                    # Clean up DataFrames after creating lookups
-                    if df_cache:
-                        cleanup_dataframes(*df_cache.values())
-                        df_cache.clear()
+                
+                # DataFrames are automatically cleaned up when exiting the context
+                # Force garbage collection after processing all segments
+                force_gc()
 
                 # --- Rollover logic starts here ---
                 today = datetime.now().date()
@@ -325,6 +337,58 @@ def get_performance_stats():
     except Exception as e:
         logging.exception("Error getting performance stats")
         return JSONResponse(content={"error": "Failed to get performance stats"}, status_code=500)
+
+@app.get("/memory", response_class=JSONResponse)
+def get_memory_stats():
+    """Endpoint to get memory usage and DataFrame statistics."""
+    try:
+        # Get system memory usage
+        current_memory = memory_manager.get_memory_usage()
+        
+        # Get DataFrame memory report
+        df_report = df_memory_tracker.get_memory_report()
+        
+        # Get memory manager statistics
+        memory_stats = {
+            "system_memory_mb": round(current_memory, 2),
+            "memory_threshold_mb": memory_manager.memory_threshold_mb,
+            "threshold_exceeded": current_memory > memory_manager.memory_threshold_mb,
+            "dataframe_memory": df_report
+        }
+        
+        return JSONResponse(content=memory_stats, status_code=200)
+    except Exception as e:
+        logging.exception("Error getting memory stats")
+        return JSONResponse(content={"error": "Failed to get memory stats"}, status_code=500)
+
+@app.post("/memory/cleanup", response_class=JSONResponse)
+def force_memory_cleanup():
+    """Endpoint to force memory cleanup and garbage collection."""
+    try:
+        initial_memory = memory_manager.get_memory_usage()
+        
+        # Cleanup large DataFrames
+        cleanup_large_dataframes(threshold_mb=25)
+        
+        # Force garbage collection
+        collected = force_gc()
+        
+        final_memory = memory_manager.get_memory_usage()
+        memory_freed = initial_memory - final_memory
+        
+        cleanup_stats = {
+            "initial_memory_mb": round(initial_memory, 2),
+            "final_memory_mb": round(final_memory, 2),
+            "memory_freed_mb": round(memory_freed, 2),
+            "gc_objects_collected": collected,
+            "cleanup_successful": memory_freed > 0
+        }
+        
+        logging.info(f"Manual memory cleanup completed: freed {memory_freed:.1f}MB")
+        return JSONResponse(content=cleanup_stats, status_code=200)
+    except Exception as e:
+        logging.exception("Error during memory cleanup")
+        return JSONResponse(content={"error": "Failed to perform memory cleanup"}, status_code=500)
 
 # Add helper to get account-specific credentials
 

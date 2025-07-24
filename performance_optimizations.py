@@ -64,12 +64,22 @@ async def get_contracts_cached(tv_symbol: str, kite, segment: str) -> list:
     perf_optimizer.cache_stats['contract_misses'] += 1
     logger.debug(f"Contract cache miss: {cache_key}")
     
-    # Import here to avoid circular imports
-    from orders import get_top_3_futures_from_tv_symbol
-    
-    contracts = get_top_3_futures_from_tv_symbol(tv_symbol, kite, segment)
-    perf_optimizer.contract_cache[cache_key] = contracts
-    return contracts
+    try:
+        # Import here to avoid circular imports
+        from orders import get_top_3_futures_from_tv_symbol
+        
+        contracts = get_top_3_futures_from_tv_symbol(tv_symbol, kite, segment)
+        
+        # Cache the result (contracts are simple dictionaries, not DataFrames)
+        perf_optimizer.contract_cache[cache_key] = contracts
+        
+        logger.debug(f"Cached {len(contracts)} contracts for {cache_key}")
+        return contracts
+        
+    except Exception as e:
+        logger.error(f"Error fetching contracts for {cache_key}: {e}")
+        # Return empty list on error to prevent crashes
+        return []
 
 async def get_positions_and_holdings_parallel(kite, segment: str, tradingsymbol: str) -> Tuple[int, Dict]:
     """Get positions and holdings in parallel to reduce API call latency."""
@@ -84,79 +94,137 @@ async def get_positions_and_holdings_parallel(kite, segment: str, tradingsymbol:
     perf_optimizer.cache_stats['position_misses'] += 1
     logger.debug(f"Position cache miss: {cache_key}")
     
-    if segment in ["NFO", "MCX"]:
-        # Only need positions for futures - with timeout handling
-        try:
-            # Add explicit timeout to prevent hanging
-            positions = await asyncio.wait_for(
-                asyncio.get_event_loop().run_in_executor(
-                    None, lambda: kite.positions()["net"]
-                ),
-                timeout=10.0  # 10 second timeout
-            )
-            existing_position = next(
-                (p for p in positions if p["tradingsymbol"] == tradingsymbol and p["exchange"] == segment), 
-                None
-            )
-            qty_held = existing_position["quantity"] if existing_position else 0
-            result = (qty_held, existing_position or {})
-        except asyncio.TimeoutError:
-            logger.error(f"Timeout fetching positions for {segment} - API took longer than 10 seconds")
-            # Return safe defaults on timeout
-            result = (0, {})
-        except Exception as e:
-            logger.error(f"Error fetching positions for {segment}: {e}")
-            # Return safe defaults on API failure
+    # Variables for DataFrame cleanup
+    holdings_df = None
+    positions_df = None
+    
+    try:
+        if segment in ["NFO", "MCX"]:
+            # Only need positions for futures - with timeout handling
+            try:
+                # Add explicit timeout to prevent hanging
+                positions_data = await asyncio.wait_for(
+                    asyncio.get_event_loop().run_in_executor(
+                        None, lambda: kite.positions()["net"]
+                    ),
+                    timeout=10.0  # 10 second timeout
+                )
+                
+                # Convert to DataFrame for efficient processing if needed
+                if len(positions_data) > 100:  # Only use DataFrame for large datasets
+                    import pandas as pd
+                    positions_df = pd.DataFrame(positions_data)
+                    matching_positions = positions_df[
+                        (positions_df['tradingsymbol'] == tradingsymbol) & 
+                        (positions_df['exchange'] == segment)
+                    ]
+                    existing_position = matching_positions.iloc[0].to_dict() if not matching_positions.empty else None
+                else:
+                    # Use simple iteration for small datasets
+                    existing_position = next(
+                        (p for p in positions_data if p["tradingsymbol"] == tradingsymbol and p["exchange"] == segment), 
+                        None
+                    )
+                
+                qty_held = existing_position["quantity"] if existing_position else 0
+                result = (qty_held, existing_position or {})
+                
+            except asyncio.TimeoutError:
+                logger.error(f"Timeout fetching positions for {segment} - API took longer than 10 seconds")
+                result = (0, {})
+            except Exception as e:
+                logger.error(f"Error fetching positions for {segment}: {e}")
+                result = (0, {})
+            
+        elif segment == "NSE":
+            # Need both holdings and positions for NSE - fetch in parallel with timeout handling
+            try:
+                async def get_holdings():
+                    return await asyncio.wait_for(
+                        asyncio.get_event_loop().run_in_executor(None, kite.holdings),
+                        timeout=10.0  # 10 second timeout
+                    )
+                
+                async def get_positions():
+                    return await asyncio.wait_for(
+                        asyncio.get_event_loop().run_in_executor(None, lambda: kite.positions()["net"]),
+                        timeout=10.0  # 10 second timeout
+                    )
+                
+                # Parallel execution with timeout protection
+                holdings_data, positions_data = await asyncio.gather(get_holdings(), get_positions())
+                
+                # Process holdings efficiently
+                if len(holdings_data) > 50:  # Use DataFrame for larger datasets
+                    import pandas as pd
+                    holdings_df = pd.DataFrame(holdings_data)
+                    matching_holdings = holdings_df[holdings_df['tradingsymbol'] == tradingsymbol]
+                    existing_position = matching_holdings.iloc[0].to_dict() if not matching_holdings.empty else None
+                else:
+                    # Simple iteration for small datasets
+                    existing_position = next((h for h in holdings_data if h["tradingsymbol"] == tradingsymbol), None)
+                
+                qty_held = existing_position["quantity"] if existing_position else 0
+                t1_qty = existing_position["t1_quantity"] if existing_position and "t1_quantity" in existing_position else 0
+                
+                if qty_held == 0 and t1_qty > 0:
+                    qty_held = t1_qty
+                    
+                # If still no holdings, check positions
+                if qty_held == 0:
+                    if len(positions_data) > 100:  # Use DataFrame for larger datasets
+                        import pandas as pd
+                        if positions_df is None:  # Avoid recreating if already exists
+                            positions_df = pd.DataFrame(positions_data)
+                        matching_positions = positions_df[
+                            (positions_df['tradingsymbol'] == tradingsymbol) & 
+                            (positions_df['exchange'] == segment)
+                        ]
+                        existing_position = matching_positions.iloc[0].to_dict() if not matching_positions.empty else None
+                    else:
+                        existing_position = next(
+                            (p for p in positions_data if p["tradingsymbol"] == tradingsymbol and p["exchange"] == segment), 
+                            None
+                        )
+                    qty_held = existing_position["quantity"] if existing_position else 0
+                    
+                result = (qty_held, existing_position or {})
+                
+            except asyncio.TimeoutError:
+                logger.error(f"Timeout fetching holdings/positions for {segment} - API took longer than 10 seconds")
+                result = (0, {})
+            except Exception as e:
+                logger.error(f"Error fetching holdings/positions for {segment}: {e}")
+                result = (0, {})
+        else:
             result = (0, {})
         
-    elif segment == "NSE":
-        # Need both holdings and positions for NSE - fetch in parallel with timeout handling
-        try:
-            async def get_holdings():
-                return await asyncio.wait_for(
-                    asyncio.get_event_loop().run_in_executor(None, kite.holdings),
-                    timeout=10.0  # 10 second timeout
-                )
+        perf_optimizer.position_cache[cache_key] = result
+        return result
+        
+    finally:
+        # Always cleanup DataFrames if they were created
+        dataframes_to_cleanup = []
+        if holdings_df is not None:
+            dataframes_to_cleanup.append(holdings_df)
+        if positions_df is not None:
+            dataframes_to_cleanup.append(positions_df)
             
-            async def get_positions():
-                return await asyncio.wait_for(
-                    asyncio.get_event_loop().run_in_executor(None, lambda: kite.positions()["net"]),
-                    timeout=10.0  # 10 second timeout
-                )
-            
-            # Parallel execution with timeout protection
-            holdings, positions = await asyncio.gather(get_holdings(), get_positions())
-            
-            # Check holdings first
-            existing_position = next((h for h in holdings if h["tradingsymbol"] == tradingsymbol), None)
-            qty_held = existing_position["quantity"] if existing_position else 0
-            t1_qty = existing_position["t1_quantity"] if existing_position and "t1_quantity" in existing_position else 0
-            
-            if qty_held == 0 and t1_qty > 0:
-                qty_held = t1_qty
-                
-            # If still no holdings, check positions
-            if qty_held == 0:
-                existing_position = next(
-                    (p for p in positions if p["tradingsymbol"] == tradingsymbol and p["exchange"] == segment), 
-                    None
-                )
-                qty_held = existing_position["quantity"] if existing_position else 0
-                
-            result = (qty_held, existing_position or {})
-        except asyncio.TimeoutError:
-            logger.error(f"Timeout fetching holdings/positions for {segment} - API took longer than 10 seconds")
-            # Return safe defaults on timeout
-            result = (0, {})
-        except Exception as e:
-            logger.error(f"Error fetching holdings/positions for {segment}: {e}")
-            # Return safe defaults on API failure
-            result = (0, {})
-    else:
-        result = (0, {})
-    
-    perf_optimizer.position_cache[cache_key] = result
-    return result
+        if dataframes_to_cleanup:
+            try:
+                from memory_manager import cleanup_dataframes
+                cleanup_dataframes(*dataframes_to_cleanup)
+            except ImportError:
+                # Fallback cleanup
+                for df in dataframes_to_cleanup:
+                    try:
+                        del df
+                    except:
+                        pass
+        
+        # Clear variables
+        holdings_df = None
+        positions_df = None
 
 async def process_account_optimized(kite, account_name: str, tv_symbol: str, segment: str, 
                                   action: str, price: float, quantity: int) -> Dict[str, Any]:

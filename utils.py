@@ -91,6 +91,7 @@ def fetch_latest_data(
     Raises:
         Exception if fetching data fails.
     """
+    df = None
     try:
         to_date = datetime.now()
         from_date = to_date - timedelta(minutes=lookback*15)
@@ -106,10 +107,24 @@ def fetch_latest_data(
         if not df.empty:
             df['date'] = pd.to_datetime(df['date'])
             df.set_index('date', inplace=True)
-        return df
+        
+        # Return a copy to ensure caller owns the DataFrame
+        result_df = df.copy() if df is not None else pd.DataFrame()
+        return result_df
+        
     except Exception as e:
         logger.error(f"Failed to fetch latest data: {e}")
         raise
+    finally:
+        # Cleanup the original DataFrame
+        if df is not None:
+            try:
+                from memory_manager import cleanup_dataframes
+                cleanup_dataframes(df)
+            except ImportError:
+                # Fallback if memory_manager not available
+                del df
+            df = None
 
 def get_instrument_token(
     kite: KiteConnect,
@@ -123,13 +138,32 @@ def get_instrument_token(
     Returns:
         Instrument token (int) if found, else None.
     """
+    df = None
     try:
         instruments = kite.instruments("NSE")
-        for inst in instruments:
-            if inst['tradingsymbol'] == tradingsymbol:
-                return inst['instrument_token']
+        df = pd.DataFrame(instruments)
+        
+        # Use DataFrame for efficient lookup
+        matching_instruments = df[df['tradingsymbol'] == tradingsymbol]
+        
+        if not matching_instruments.empty:
+            instrument_token = matching_instruments.iloc[0]['instrument_token']
+            logger.debug(f"Found instrument token {instrument_token} for {tradingsymbol}")
+            return int(instrument_token)
+        
         logger.warning(f"Instrument token not found for {tradingsymbol}")
         return None
+        
     except Exception as e:
         logger.error(f"Error fetching instrument token: {e}")
         return None
+    finally:
+        # Cleanup DataFrame
+        if df is not None:
+            try:
+                from memory_manager import cleanup_dataframes
+                cleanup_dataframes(df)
+            except ImportError:
+                # Fallback if memory_manager not available
+                del df
+            df = None

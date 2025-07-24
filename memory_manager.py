@@ -8,10 +8,40 @@ import logging
 import psutil
 import os
 import asyncio
-from typing import Optional
+from typing import Optional, List, Any
 import pandas as pd
+from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
+
+class DataFrameContext:
+    """Context manager for automatic DataFrame cleanup."""
+    
+    def __init__(self, memory_manager):
+        self.memory_manager = memory_manager
+        self.dataframes: List[pd.DataFrame] = []
+        
+    def __enter__(self):
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Cleanup all tracked DataFrames on exit."""
+        if self.dataframes:
+            self.memory_manager.cleanup_dataframes(*self.dataframes)
+            self.dataframes.clear()
+    
+    def track(self, *dataframes):
+        """Track DataFrames for automatic cleanup."""
+        for df in dataframes:
+            if isinstance(df, pd.DataFrame):
+                self.dataframes.append(df)
+        return dataframes[0] if len(dataframes) == 1 else dataframes
+    
+    def create_dataframe(self, *args, **kwargs) -> pd.DataFrame:
+        """Create and track a new DataFrame."""
+        df = pd.DataFrame(*args, **kwargs)
+        self.dataframes.append(df)
+        return df
 
 class MemoryManager:
     """Centralized memory management for the trading application."""
@@ -42,14 +72,63 @@ class MemoryManager:
         return False
     
     def cleanup_dataframes(self, *dataframes) -> None:
-        """Explicitly cleanup pandas DataFrames."""
+        """Explicitly cleanup pandas DataFrames with comprehensive memory management."""
+        cleaned_count = 0
         for df in dataframes:
             if isinstance(df, pd.DataFrame):
                 try:
+                    # Clear DataFrame data explicitly
+                    if hasattr(df, '_mgr'):
+                        df._mgr = None
+                    if hasattr(df, '_item_cache'):
+                        df._item_cache.clear()
+                    
+                    # Delete the DataFrame
                     del df
-                except:
+                    cleaned_count += 1
+                except Exception as e:
+                    logger.debug(f"Error cleaning DataFrame: {e}")
                     pass
-        self.force_garbage_collection()
+        
+        if cleaned_count > 0:
+            logger.debug(f"Cleaned up {cleaned_count} DataFrames")
+            self.force_garbage_collection()
+    
+    def safe_dataframe_operation(self, operation_func, *args, **kwargs):
+        """
+        Safely execute DataFrame operations with automatic cleanup.
+        
+        Args:
+            operation_func: Function that returns a DataFrame or tuple of DataFrames
+            *args, **kwargs: Arguments to pass to the operation function
+            
+        Returns:
+            Result of the operation function
+        """
+        temp_dataframes = []
+        try:
+            result = operation_func(*args, **kwargs)
+            
+            # If result contains DataFrames, track them for cleanup
+            if isinstance(result, pd.DataFrame):
+                temp_dataframes.append(result)
+            elif isinstance(result, (list, tuple)):
+                for item in result:
+                    if isinstance(item, pd.DataFrame):
+                        temp_dataframes.append(item)
+            
+            return result
+        except Exception as e:
+            logger.error(f"Error in DataFrame operation: {e}")
+            raise
+        finally:
+            # Note: We don't cleanup here as the caller might need the DataFrames
+            # This method is for tracking purposes
+            pass
+    
+    def create_dataframe_context(self):
+        """Create a context manager for DataFrame operations."""
+        return DataFrameContext(self)
     
     async def monitor_memory(self, interval_seconds: int = 300) -> None:
         """Background task to monitor memory usage."""

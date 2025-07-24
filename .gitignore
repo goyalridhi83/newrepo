@@ -1,0 +1,145 @@
+# Environment variables - CRITICAL: Never commit these!
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env
+
+# Access tokens and API keys - CRITICAL: Never commit these!
+access_token*.txt
+*_token.txt
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+stock_scanner.log*
+
+# Cache
+cache/
+.cache/
+*.cache
+
+# Redis dump
+dump.rdb
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Trading specific - NEVER COMMIT THESE!
+# API credentials
+kite_credentials.json
+zerodha_credentials.json
+broker_config.json
+
+# Trading data that might contain sensitive info
+positions.json
+holdings.json
+orders.json
+trades.json
+
+# Configuration files that might contain secrets
+config.ini
+settings.ini
+local_config.py
+secrets.py
+
+# AWS credentials
+.aws/
+aws-credentials.json
+
+# SSH keys
+id_rsa
+id_rsa.pub
+*.pem
+*.ppk
+
+# SSL certificates
+*.crt
+*.cert
+*.p12
+*.pfx
+
+# Any file containing "secret", "password", "key", or "token"
+*secret*
+*password*
+*key*
+*token*
+*credential*

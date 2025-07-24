@@ -67,23 +67,37 @@ def set_instrument_cache(segment: str, instruments_df: pd.DataFrame, max_retries
     """Serializes a DataFrame to JSON and stores it in Redis for 24 hours."""
     key = f"instrument_cache:{segment}"
     
-    for attempt in range(max_retries):
-        try:
-            # Using 'split' orient is efficient for pandas DataFrames.
-            json_data = instruments_df.to_json(orient="split")
-            redis_client.set(key, json_data, ex=86400) # 24-hour expiry
-            logger.info(f"Successfully cached instruments for segment {segment}.")
-            return
-        except redis.ConnectionError as e:
-            if attempt < max_retries - 1:
-                logger.warning(f"Redis connection error caching {segment}, attempt {attempt + 1}, retrying: {e}")
-                time.sleep(0.1 * (2 ** attempt))  # Exponential backoff
-                continue
-            else:
-                logger.error(f"Failed to cache {segment} after {max_retries} attempts: {e}")
-        except Exception as e:
-            logger.error(f"Failed to set instrument cache for {segment} in Redis: {e}")
-            break
+    # Create a copy to avoid modifying the original DataFrame
+    df_copy = None
+    
+    try:
+        df_copy = instruments_df.copy()
+        
+        for attempt in range(max_retries):
+            try:
+                # Using 'split' orient is efficient for pandas DataFrames.
+                json_data = df_copy.to_json(orient="split")
+                redis_client.set(key, json_data, ex=86400) # 24-hour expiry
+                logger.info(f"Successfully cached {len(df_copy)} instruments for segment {segment}.")
+                return
+            except redis.ConnectionError as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"Redis connection error caching {segment}, attempt {attempt + 1}, retrying: {e}")
+                    time.sleep(0.1 * (2 ** attempt))  # Exponential backoff
+                    continue
+                else:
+                    logger.error(f"Failed to cache {segment} after {max_retries} attempts: {e}")
+            except Exception as e:
+                logger.error(f"Failed to set instrument cache for {segment} in Redis: {e}")
+                break
+    finally:
+        # Always cleanup the DataFrame copy
+        if df_copy is not None:
+            try:
+                del df_copy
+            except:
+                pass
+            df_copy = None
 
 
 def get_instrument_cache(segment: str, max_retries: int = 3) -> Optional[pd.DataFrame]:
