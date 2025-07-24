@@ -27,7 +27,7 @@ eip_allocation_id = "eipalloc-000a4c982d826f568"
 user_data_script = """#!/bin/bash
 set -euo pipefail
 
-# Redirect all output to a log file for debugging
+# Redirect output to log file
 exec > >(tee -a /var/log/bootstrap.log) 2>&1
 
 # --- ADD SWAP SPACE TO PREVENT OOM KILL ---
@@ -37,85 +37,152 @@ chmod 600 /swapfile
 mkswap /swapfile
 swapon /swapfile
 
-# Define variables for domain and email
-echo "Setting up environment variables..."
-DOMAIN="sumitgoyalapp.xyz"
-EMAIL="goyalridhi83@gmail.com"
-BUCKET="sumitgoyalappxyz"
+# --- VARIABLES ---
+echo "Setting environment variables..."
+DOMAIN="test"
+EMAIL="test"
+BUCKET="test"
 REGION="ap-south-1"
 REPO_DIR="/home/ec2-user/newrepo"
 
-# --- PACKAGE INSTALLATION ---
-echo "Updating system and installing packages..."
+# --- INSTALL PACKAGES ---
+echo "Installing packages..."
 dnf update -y
-dnf install -y git nginx python3 python3-pip
+dnf install -y git nginx python3 python3-pip docker unzip
 rpm -ivh --nodeps https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
 
-# --- ENABLE AND START REDIS (via Docker) ---
-echo "Installing Docker..."
-dnf install -y docker
+# --- ENABLE DOCKER & RUN REDIS ---
 systemctl enable docker
 systemctl start docker
-
-echo "Running Redis container..."
 docker run -d --name redis-server -p 6379:6379 redis:alpine
 
-echo "Installing Certbot..."
+# --- INSTALL CERTBOT ---
 dnf install -y certbot python3-certbot-nginx
 
-echo "Cleaning up swap space..."
+# --- REMOVE SWAP ---
 swapoff /swapfile
 rm /swapfile
 
-# --- APPLICATION SETUP ---
-echo "Enabling and starting Nginx..."
-systemctl enable nginx
-systemctl start nginx
-
+# --- CLONE REPO ---
 echo "Cloning GitHub repo..."
 cd /home/ec2-user
-git clone https://github.com/goyalridhi83/newrepo.git
+git clone https://github.com/goyalridhi83/newrepo.git || true
 cd newrepo
-git checkout main_aws
+git checkout main_aws_test
 
-echo "Setting permissions for repo directory..."
 chown -R ec2-user:ec2-user ${REPO_DIR}
 
-echo "Installing Python dependencies..."
+# --- INSTALL PYTHON DEPENDENCIES ---
+echo "Installing Python packages..."
 sudo -u ec2-user pip3 install --upgrade pip
 sudo -u ec2-user pip3 install -r requirements.txt
 
-echo "Making log file writable..."
+# --- SETUP LOG FILE ---
 touch ${REPO_DIR}/stock_scanner.log
+chown ec2-user:ec2-user "${REPO_DIR}/stock_scanner.log"
 chmod 664 ${REPO_DIR}/stock_scanner.log
 
+# --- CREATE .env ---
 echo "Creating .env file..."
 cat <<EOF > ${REPO_DIR}/.env
-WEBHOOK_SECRET=xanvestatechsecret
+WEBHOOK_SECRET=test
 
 # --- Dual account support ---
-KITE_API_KEY_1=0i4egr11rkdsctvb
-KITE_API_SECRET_1=d4tb1ele7hfg51a6i8jbxnysi8zkpesf
-ACCESS_TOKEN_PATH_1=access_token1.txt
+KITE_API_KEY_1=test
+KITE_API_SECRET_1=test
+ACCESS_TOKEN_PATH_1=test
 
-KITE_API_KEY_2=wt1b63ihts1q60wt
-KITE_API_SECRET_2=rhl5o9yydobp4hfpmgl3lx9kkotnyk0t
-ACCESS_TOKEN_PATH_2=access_token2.txt
+KITE_API_KEY_2=test
+KITE_API_SECRET_2=test
+ACCESS_TOKEN_PATH_2=test
 EOF
 
 chown ec2-user:ec2-user ${REPO_DIR}/.env
 chmod 600 ${REPO_DIR}/.env
 
-echo "Restoring SSL certificates from S3 if available..."
-if aws s3 ls "s3://$BUCKET/letsencrypt/live/sumitgoyalapp.xyz/fullchain.pem" 2>&1 | grep -q 'fullchain.pem'; then
+# --- RESTORE SSL CERTS FROM S3 IF PRESENT ---
+echo "Checking for SSL certs in S3..."
+if aws s3 ls "s3://$BUCKET/letsencrypt/live/$DOMAIN/fullchain.pem" > /dev/null 2>&1; then
     echo "Restoring SSL certificates from S3..."
-    sudo mkdir -p /etc/letsencrypt
-    sudo aws s3 sync "s3://$BUCKET/letsencrypt/" /etc/letsencrypt/
+    mkdir -p /etc/letsencrypt
+    aws s3 sync "s3://$BUCKET/letsencrypt/" /etc/letsencrypt/
+    SSL_READY=true
 else
-    echo "No SSL backup found on S3, will issue new certificate."
+    echo "No SSL certs in S3. Will issue a new one."
+    SSL_READY=false
 fi
 
-echo "Creating systemd service for FastAPI app..."
+# --- CREATE TEMPORARY NGINX CONFIG FOR HTTP CHALLENGE ---
+echo "Setting up temporary Nginx config for certbot..."
+cat <<EOF > /etc/nginx/conf.d/temp_certbot.conf
+server {
+    listen 80;
+    server_name $DOMAIN;
+
+    location / {
+        root /var/www/html;
+    }
+
+    location ~ /.well-known/acme-challenge/ {
+        allow all;
+        root /var/www/html;
+    }
+}
+EOF
+
+nginx -t && systemctl enable nginx && systemctl start nginx && systemctl reload nginx
+
+# --- ISSUE SSL CERT IF NOT RESTORED ---
+if [ "$SSL_READY" = false ]; then
+    echo "Issuing new SSL certificate..."
+    mkdir -p /var/www/html
+    certbot certonly --webroot -w /var/www/html -d "$DOMAIN" --non-interactive --agree-tos -m "$EMAIL"
+
+    echo "Ensuring S3 bucket exists..."
+    if ! aws s3api head-bucket --bucket "$BUCKET" 2>/dev/null; then
+    echo "Bucket does not exist. Creating bucket $BUCKET..."
+    aws s3api create-bucket \
+        --bucket "$BUCKET" \
+        --region "$REGION" \
+        --create-bucket-configuration LocationConstraint="$REGION"
+    else
+    echo "Bucket exists."
+    fi
+
+    echo "Uploading new certs to S3..."
+    aws s3 sync /etc/letsencrypt/ "s3://$BUCKET/letsencrypt/"
+fi
+
+# --- FINAL NGINX CONFIG ---
+echo "Configuring Nginx with SSL..."
+rm -f /etc/nginx/conf.d/temp_certbot.conf
+cat <<EOF > /etc/nginx/conf.d/webhook.conf
+server {
+    listen 80;
+    server_name $DOMAIN;
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name $DOMAIN;
+
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+}
+EOF
+
+nginx -t && systemctl reload nginx
+
+# --- CREATE FASTAPI SYSTEMD SERVICE ---
+echo "Creating systemd service for FastAPI..."
 cat <<EOF > /etc/systemd/system/fastapi-webhook.service
 [Unit]
 Description=FastAPI Webhook Service
@@ -136,49 +203,16 @@ systemctl daemon-reload
 systemctl enable fastapi-webhook
 systemctl start fastapi-webhook
 
-echo "Configuring Nginx as a reverse proxy..."
-cat <<EOF > /etc/nginx/conf.d/webhook.conf
-server {
-    listen 80;
-    server_name ${DOMAIN};
-    return 301 https://\$host\$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    server_name ${DOMAIN};
-    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    }
-}
-EOF
-
-echo "Issuing SSL certificate if not present..."
-if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-    echo "Requesting SSL cert via Certbot..."
-    sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$EMAIL" --redirect
-    echo "Uploading new SSL certificates to S3..."
-    sudo aws s3 sync /etc/letsencrypt/ "s3://$BUCKET/letsencrypt/"
-else
-    echo "SSL certificate already present, skipping issuance."
-fi
-
-echo "Testing Nginx configuration..."
-nginx -t
-
-echo "Reloading Nginx to apply SSL configuration..."
-systemctl reload nginx
+echo "Bootstrap completed successfully."
 """
 
 # --- AWS Clients ---
-ec2_client = boto3.client("ec2", region_name=region)
-ec2_resource = boto3.resource("ec2", region_name=region)
+region = "ap-south-1"  # or your region
+
+# Use a specific profile for the second AWS account
+session = boto3.Session(profile_name="testprofile", region_name=region)
+ec2_client = session.client("ec2")
+ec2_resource = session.resource("ec2")
 
 # --- Step 1: Terminate Existing Running Instances ---
 def terminate_running_instances():
@@ -201,14 +235,13 @@ def terminate_running_instances():
 
 # --- Step 2: Launch New EC2 Instance ---
 def ensure_iam_role_and_instance_profile():
-    iam = boto3.client('iam')
+    iam = session.client('iam')
     role_name = 'EC2S3SSLCertRole'
     instance_profile_name = role_name + 'InstanceProfile'
     policy_name = 'EC2S3SSLCertPolicy'
-    bucket_name = 'sumitgoyalappxyz'
 
     # Get Account ID for constructing the ARN
-    sts = boto3.client('sts')
+    sts = session.client('sts')
     account_id = sts.get_caller_identity().get('Account')
     policy_arn = f'arn:aws:iam::{account_id}:policy/{policy_name}'
 
@@ -234,8 +267,7 @@ def ensure_iam_role_and_instance_profile():
                     "s3:PutObject"
                 ],
                 "Resource": [
-                    f"arn:aws:s3:::{bucket_name}",
-                    f"arn:aws:s3:::{bucket_name}/*"
+                    "arn:aws:s3:::*"
                 ]
             }
         ]
