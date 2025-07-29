@@ -57,9 +57,10 @@ def get_top_3_futures_from_tv_symbol(...):
 
 ### 5. Performance Optimizations (`performance_optimizations.py`)
 **Memory-safe position/holdings fetching:**
-- Automatic DataFrame cleanup in `get_positions_and_holdings_parallel()`
+- Automatic DataFrame cleanup in `get_positions_and_holdings_direct()`
 - Smart DataFrame usage (only for large datasets)
 - Timeout protection with proper cleanup
+- **Removed position caching** to ensure fresh data on every request
 
 ### 6. Redis Utils (`redis_utils.py`)
 **Enhanced caching:**
@@ -110,8 +111,8 @@ Returns:
     "total_memory_mb": 12.45,
     "dataframes": {
       "instruments_nfo": {"memory_mb": 8.2, "rows": 1500, "columns": 10},
-      "positions_cache": {"memory_mb": 2.1, "rows": 50, "columns": 15},
-      "holdings_cache": {"memory_mb": 2.15, "rows": 25, "columns": 12}
+      "temp_positions": {"memory_mb": 2.1, "rows": 50, "columns": 15},
+      "temp_holdings": {"memory_mb": 2.15, "rows": 25, "columns": 12}
     }
   }
 }

@@ -244,8 +244,8 @@ class TestPerformanceOptimizationsMemoryCleanup:
     
     @pytest.mark.asyncio
     async def test_get_positions_and_holdings_memory_cleanup(self):
-        """Test memory cleanup in get_positions_and_holdings_parallel."""
-        from performance_optimizations import get_positions_and_holdings_parallel, perf_optimizer
+        """Test memory cleanup in get_positions_and_holdings_direct."""
+        from performance_optimizations import get_positions_and_holdings_direct, perf_optimizer
         
         # Clear cache
         perf_optimizer.clear_request_cache()
@@ -263,7 +263,7 @@ class TestPerformanceOptimizationsMemoryCleanup:
         initial_memory = get_memory_usage()
         
         # Call the function
-        qty_held, position = await get_positions_and_holdings_parallel(
+        qty_held, position = await get_positions_and_holdings_direct(
             mock_kite, "NSE", "STOCK50"
         )
         

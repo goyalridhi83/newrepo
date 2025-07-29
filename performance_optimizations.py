@@ -15,36 +15,26 @@ class PerformanceOptimizer:
     
     def __init__(self):
         self.contract_cache = {}  # Cache contracts within request only
-        self.position_cache = {}  # Cache positions within request only
         # Cache hit/miss statistics (for monitoring only)
         self.cache_stats = {
             'contract_hits': 0,
-            'contract_misses': 0,
-            'position_hits': 0,
-            'position_misses': 0
+            'contract_misses': 0
         }
         
     def clear_request_cache(self):
         """Clear cache at the start of each webhook request."""
         self.contract_cache.clear()
-        self.position_cache.clear()
         # Note: cache_stats are NOT cleared - they accumulate for monitoring
         
     def get_cache_stats(self):
         """Get cache hit/miss statistics."""
         total_contract = self.cache_stats['contract_hits'] + self.cache_stats['contract_misses']
-        total_position = self.cache_stats['position_hits'] + self.cache_stats['position_misses']
         
         return {
             'contract_cache': {
                 'hits': self.cache_stats['contract_hits'],
                 'misses': self.cache_stats['contract_misses'],
                 'hit_rate': round(self.cache_stats['contract_hits'] / total_contract * 100, 1) if total_contract > 0 else 0
-            },
-            'position_cache': {
-                'hits': self.cache_stats['position_hits'],
-                'misses': self.cache_stats['position_misses'],
-                'hit_rate': round(self.cache_stats['position_hits'] / total_position * 100, 1) if total_position > 0 else 0
             }
         }
 
@@ -81,18 +71,8 @@ async def get_contracts_cached(tv_symbol: str, kite, segment: str) -> list:
         # Return empty list on error to prevent crashes
         return []
 
-async def get_positions_and_holdings_parallel(kite, segment: str, tradingsymbol: str) -> Tuple[int, Dict]:
-    """Get positions and holdings in parallel to reduce API call latency."""
-    cache_key = f"{id(kite)}_{segment}"  # Use kite object id for unique key
-    
-    if cache_key in perf_optimizer.position_cache:
-        perf_optimizer.cache_stats['position_hits'] += 1
-        logger.debug(f"Position cache hit: {cache_key}")
-        return perf_optimizer.position_cache[cache_key]
-    
-    # Cache miss - fetch from API
-    perf_optimizer.cache_stats['position_misses'] += 1
-    logger.debug(f"Position cache miss: {cache_key}")
+async def get_positions_and_holdings_direct(kite, segment: str, tradingsymbol: str) -> Tuple[int, Dict]:
+    """Get positions and holdings directly from API without caching."""
     
     # Variables for DataFrame cleanup
     holdings_df = None
@@ -199,7 +179,6 @@ async def get_positions_and_holdings_parallel(kite, segment: str, tradingsymbol:
         else:
             result = (0, {})
         
-        perf_optimizer.position_cache[cache_key] = result
         return result
         
     finally:
@@ -279,7 +258,7 @@ async def process_account_optimized(kite, account_name: str, tv_symbol: str, seg
                 total_quantity = int(quantity * lot_size)
                 
                 # Get positions/holdings for the selected contract
-                qty_held, existing_position = await get_positions_and_holdings_parallel(kite, segment, tradingsymbol)
+                qty_held, existing_position = await get_positions_and_holdings_direct(kite, segment, tradingsymbol)
                 
             elif action == "sell":
                 # SELL: Check which contracts user actually holds
@@ -291,7 +270,7 @@ async def process_account_optimized(kite, account_name: str, tv_symbol: str, seg
                 # Check all contracts to find which one user holds
                 for contract in contracts:
                     contract_symbol = contract['tradingsymbol']
-                    contract_qty, contract_position = await get_positions_and_holdings_parallel(kite, segment, contract_symbol)
+                    contract_qty, contract_position = await get_positions_and_holdings_direct(kite, segment, contract_symbol)
                     
                     if contract_qty > 0:
                         # Found a position - use this contract for selling
@@ -316,7 +295,7 @@ async def process_account_optimized(kite, account_name: str, tv_symbol: str, seg
             total_quantity = quantity
             
             # Get positions/holdings
-            qty_held, existing_position = await get_positions_and_holdings_parallel(kite, segment, tradingsymbol)
+            qty_held, existing_position = await get_positions_and_holdings_direct(kite, segment, tradingsymbol)
         
         # Step 3: Place order logic (same as before)
         if action == "buy":
