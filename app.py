@@ -543,12 +543,75 @@ async def webhook(
         
         webhook_start_time = time.time()
 
-        # Run both accounts in parallel with request ID context
+        # Check authentication for both accounts before processing
+        authenticated_accounts = []
+        account_results = {
+            "account1": {"status": "not authenticated", "error": "Please authenticate via /token/1"},
+            "account2": {"status": "not authenticated", "error": "Please authenticate via /token/2"}
+        }
+        
+        for idx, (kite, acc_name) in enumerate([(kite1, "account1"), (kite2, "account2")], 1):
+            try:
+                # Check if account is authenticated using the same logic as token validation
+                profile = await asyncio.wait_for(
+                    asyncio.get_event_loop().run_in_executor(None, kite.profile),
+                    timeout=5.0  # 5 second timeout
+                )
+                if profile and 'user_id' in profile:
+                    authenticated_accounts.append((kite, acc_name))
+                    log_with_request_id('INFO', 
+                        f"{acc_name} authentication verified - User: {profile.get('user_name', 'N/A')} ({profile.get('user_id', 'N/A')})",
+                        account=acc_name,
+                        user_id=profile.get('user_id'),
+                        user_name=profile.get('user_name')
+                    )
+                else:
+                    log_with_request_id('WARNING', 
+                        f"{acc_name} authentication failed - Invalid profile response",
+                        account=acc_name
+                    )
+            except asyncio.TimeoutError:
+                log_with_request_id('ERROR', 
+                    f"{acc_name} authentication check timed out",
+                    account=acc_name
+                )
+            except Exception as e:
+                log_with_request_id('ERROR', 
+                    f"{acc_name} authentication failed: {str(e)}",
+                    account=acc_name,
+                    error=str(e)
+                )
+
+        # Check if any accounts are authenticated
+        if not authenticated_accounts:
+            log_with_request_id('ERROR', 
+                "No accounts are authenticated - cannot process webhook",
+                authenticated_count=0,
+                total_accounts=2
+            )
+            return JSONResponse(
+                content={
+                    "status": "error", 
+                    "message": "No accounts are authenticated. Please authenticate via /token/1 and /token/2 endpoints.",
+                    "account1": account_results["account1"],
+                    "account2": account_results["account2"],
+                    "request_id": req_id
+                }, 
+                status_code=200  # Return 200 to avoid TradingView retries
+            )
+
+        log_with_request_id('INFO', 
+            f"Authentication check completed: {len(authenticated_accounts)}/2 accounts authenticated",
+            authenticated_count=len(authenticated_accounts),
+            total_accounts=2
+        )
+
+        # Run authenticated accounts in parallel with request ID context
         results = []
         account_tasks = []
         
         # Create tasks with proper request ID context using optimized processing
-        for idx, (kite, acc_name) in enumerate([(kite1, "account1"), (kite2, "account2")], 1):
+        for kite, acc_name in authenticated_accounts:
             # Create a task with the optimized account processing
             task = asyncio.create_task(
                 process_account_optimized(kite, acc_name, tv_symbol, segment, action, price, quantity)
@@ -567,7 +630,7 @@ async def webhook(
                         account=task.acc_name,
                         result=result
                     )
-                    results.append(result)
+                    account_results[task.acc_name] = result
                 except Exception as e:
                     log_with_request_id('ERROR', 
                         f"Account {task.acc_name} processing failed: {str(e)}",
@@ -575,9 +638,37 @@ async def webhook(
                         error=str(e),
                         exc_info=True
                     )
-                    results.append({"status": "error", "error": str(e), "account": task.acc_name})
+                    account_results[task.acc_name] = {"status": "error", "error": str(e), "account": task.acc_name}
+        
         # Calculate total webhook processing time
         total_processing_time = (time.time() - webhook_start_time) * 1000
+        
+        # Record performance metrics
+        perf_monitor.record_request(total_processing_time, req_id)
+        
+        response = {
+            "account1": account_results["account1"],
+            "account2": account_results["account2"],
+            "total_processing_time_ms": round(total_processing_time, 2),
+            "request_id": req_id
+        }
+        
+        # Log performance summary
+        log_with_request_id('INFO', 
+            f"Webhook processing completed in {total_processing_time:.1f}ms",
+            total_time_ms=total_processing_time,
+            account1_time_ms=account_results["account1"].get('processing_time_ms', 0),
+            account2_time_ms=account_results["account2"].get('processing_time_ms', 0)
+        )
+        
+        return JSONResponse(content=response, status_code=200)
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logging.exception("Error processing webhook.")
+        # Always return 200 OK to avoid TradingView retries, but log the error for review
+        return JSONResponse(status_code=200, content={"status": "error", "message": "An internal error occurred. Please check the server logs."})
         
         # Record performance metrics
         perf_monitor.record_request(total_processing_time, req_id)
