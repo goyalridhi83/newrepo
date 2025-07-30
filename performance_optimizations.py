@@ -323,7 +323,7 @@ async def process_account_optimized(kite, account_name: str, tv_symbol: str, seg
                 logger.info(f"{account_name}: No holdings for {tradingsymbol}. Skipping sell. ({processing_time:.1f}ms)")
                 return {"status": "no holdings, sell skipped", "processing_time_ms": processing_time}
             else:
-                sell_quantity = min(total_quantity, abs(qty_held)) if qty_held > 0 else total_quantity
+                sell_quantity = qty_held
                 # Import here to avoid circular imports
                 from orders import place_order
                 order_id, error = await asyncio.get_event_loop().run_in_executor(
