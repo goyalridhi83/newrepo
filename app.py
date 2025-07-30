@@ -88,7 +88,7 @@ class WebhookPayload(BaseModel):
     segment: str = "NSE"
     price: float = 0.0
     time: str = None
-    quantity: int = 1  # Optional, default 1
+    quantity: float = 0.0
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -481,20 +481,35 @@ async def place_order_async(kite, *args, **kwargs):
 @app.post("/webhook", response_model=None)
 @log_operation("webhook_request")
 async def webhook(
-    payload: WebhookPayload, 
+    payload: Request, 
     token: str = Query(...),
     x_request_id: Optional[str] = Header(None, alias='X-Request-ID')
 ) -> JSONResponse:
+
+    # Step 1: Read raw body
+    try:
+        raw_body = await payload.body()
+        body_str = raw_body.decode('utf-8')
+        log_with_request_id('INFO', "Raw webhook payload received", raw=body_str)
+    except Exception as e:
+        log_with_request_id('ERROR', "Failed to read webhook request body", error=str(e), exc_info=True)
+        return JSONResponse(content={"status": "error", "message": "Invalid request body"}, status_code=400)
+
+    # Use Pydantic to validate and parse from JSON
+    try:
+        payload = WebhookPayload.model_validate_json(body_str)
+        log_with_request_id('INFO', "Payload validated successfully", payload=payload.model_dump())
+    except ValidationError as ve:
+        log_with_request_id('ERROR', "Validation error in payload", error=str(ve), exc_info=True)
+        return JSONResponse(status_code=200, content={"status": "error", "message": "Payload validation failed"})
+    except Exception as e:
+        log_with_request_id('ERROR', "Unexpected error in payload validation", error=str(e), exc_info=True)
+        return JSONResponse(status_code=200, content={"status": "error", "message": "Unexpected error during validation"})
+    
     # Set or generate request ID
     req_id = x_request_id or str(uuid.uuid4())
     request_id.set(req_id)
     
-    log_with_request_id('INFO', 
-        'Received webhook request',
-        payload=payload.dict(),
-        request_id=req_id
-    )
-    """Webhook endpoint for trading signals."""
     if token != WEBHOOK_SECRET:
         logging.warning("Unauthorized access attempt.")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
@@ -526,7 +541,7 @@ async def webhook(
         price = payload.price
         time_received = payload.time
         # Extract quantity
-        quantity = payload.quantity if hasattr(payload, 'quantity') and payload.quantity else 1
+        quantity = int(payload.quantity) if hasattr(payload, 'quantity') and payload.quantity else 1
         # For NFO/MCX, always force quantity to 1
         if segment in ["NFO", "MCX"]:
             quantity = 1
