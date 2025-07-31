@@ -244,7 +244,7 @@ async def process_account_optimized(kite, account_name: str, tv_symbol: str, seg
                     today = datetime.now().date()
                     days_left = (expiry - today).days
 
-                    if 0 < days_left <= 7 and today.weekday() < 5:   
+                    if days_left <= 7 and today.weekday() < 5:   
                         tradingsymbol = contracts[1]['tradingsymbol'] if len(contracts) > 1 else contracts[0]['tradingsymbol']
                         selected_contract = contracts[1] if len(contracts) > 1 else contracts[0]
                     else:

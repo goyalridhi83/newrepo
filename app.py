@@ -459,9 +459,44 @@ def save_and_refresh_token_account(account_num: int, token: str = Form(...)) -> 
                 kite2.set_access_token(access_token)
                 logging.info(f"✅ Global kite2 object updated with new access token for account {account_num}")
             
+            # ✅ BUILD INSTRUMENT CACHE AFTER SUCCESSFUL AUTHENTICATION
+            try:
+                segments = ["NFO", "MCX"]
+                cache_built_count = 0
+                
+                for seg in segments:
+                    try:
+                        # Check if cache already exists
+                        existing_cache = get_instrument_cache(seg)
+                        if existing_cache is not None:
+                            logging.info(f"[Token] Instrument cache for {seg} already exists, skipping build")
+                            cleanup_dataframes(existing_cache)
+                            cache_built_count += 1
+                            continue
+                        
+                        # Build cache using the authenticated kite object
+                        logging.info(f"[Token] Building instrument cache for {seg} using account {account_num}...")
+                        instruments = kite.instruments(exchange=seg)
+                        df = pd.DataFrame(instruments)
+                        set_instrument_cache(seg, df)
+                        cleanup_dataframes(df)  # Clean up after caching
+                        cache_built_count += 1
+                        logging.info(f"[Token] ✅ Successfully built instrument cache for {seg} ({len(instruments)} instruments)")
+                        
+                    except Exception as e:
+                        logging.warning(f"[Token] Failed to build instrument cache for {seg}: {str(e)}")
+                
+                if cache_built_count > 0:
+                    logging.info(f"[Token] Instrument cache building completed: {cache_built_count}/{len(segments)} segments cached")
+                    
+            except Exception as e:
+                logging.error(f"[Token] Error during instrument cache building: {str(e)}")
+                # Don't fail token validation if cache building fails
+            
             logging.info(f"Access token validated and saved successfully for account {account_num}.")
             user_info = f"User: {profile.get('user_name', 'N/A')} ({profile.get('user_id', 'N/A')})"
-            return HTMLResponse(content=f"<b>Token is valid! Login successful.</b><br>{user_info}<br>Account {account_num} is now ready for trading.", status_code=200)
+            cache_status = "Instrument cache updated." if cache_built_count > 0 else "Instrument cache will be built on first trade."
+            return HTMLResponse(content=f"<b>Token is valid! Login successful.</b><br>{user_info}<br>Account {account_num} is now ready for trading.<br><small>{cache_status}</small>", status_code=200)
         except Exception as ve:
             logging.error(f"Token saved but validation failed for account {account_num}: {ve}")
             return HTMLResponse(content=f"<b>Invalid token:</b> An internal error occurred. Please check the server logs.", status_code=400)
