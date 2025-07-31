@@ -237,7 +237,7 @@ async def lifespan(app: FastAPI):
                     today = datetime.now().date()
                     days_left = (expiry - today).days
 
-                    if 0 < days_left <= 7 and today.weekday() < 5:
+                    if days_left <= 7 and today.weekday() < 5:
                         current_symbol = current_contract['tradingsymbol']
                         next_symbol = next_contract['tradingsymbol']
 
