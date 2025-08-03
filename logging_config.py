@@ -38,7 +38,7 @@ class LoggingManager:
     def setup_logging(
         self, 
         log_file: str = "stock_scanner.log",
-        max_bytes: int = 10 * 1024 * 1024,  # 10MB
+        max_bytes: int = 50 * 1024 * 1024,  # 50MB
         backup_count: int = 5,
         log_level: int = logging.INFO
     ):
