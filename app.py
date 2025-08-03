@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse, HTMLResponse, PlainTextResponse
 from fastapi import status
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
+from pydantic import ValidationError
 import pandas as pd
 import logging
 import os
