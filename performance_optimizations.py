@@ -139,34 +139,35 @@ async def get_positions_and_holdings_direct(kite, segment: str, tradingsymbol: s
                     import pandas as pd
                     holdings_df = pd.DataFrame(holdings_data)
                     matching_holdings = holdings_df[holdings_df['tradingsymbol'] == tradingsymbol]
-                    existing_position = matching_holdings.iloc[0].to_dict() if not matching_holdings.empty else None
+                    existing_holdings = matching_holdings.iloc[0].to_dict() if not matching_holdings.empty else None
                 else:
                     # Simple iteration for small datasets
-                    existing_position = next((h for h in holdings_data if h["tradingsymbol"] == tradingsymbol), None)
+                    existing_holdings = next((h for h in holdings_data if h["tradingsymbol"] == tradingsymbol), None)
                 
-                qty_held = existing_position["quantity"] if existing_position else 0
-                t1_qty = existing_position["t1_quantity"] if existing_position and "t1_quantity" in existing_position else 0
+                qty_held = existing_holdings["quantity"] if existing_holdings else 0
+                qty_held += existing_holdings["t1_quantity"] if existing_holdings and "t1_quantity" in existing_holdings else 0
                 
-                if qty_held == 0 and t1_qty > 0:
-                    qty_held = t1_qty
+                
                     
                 # If still no holdings, check positions
-                if qty_held == 0:
-                    if len(positions_data) > 100:  # Use DataFrame for larger datasets
-                        import pandas as pd
-                        if positions_df is None:  # Avoid recreating if already exists
-                            positions_df = pd.DataFrame(positions_data)
-                        matching_positions = positions_df[
-                            (positions_df['tradingsymbol'] == tradingsymbol) & 
-                            (positions_df['exchange'] == segment)
-                        ]
-                        existing_position = matching_positions.iloc[0].to_dict() if not matching_positions.empty else None
-                    else:
-                        existing_position = next(
-                            (p for p in positions_data if p["tradingsymbol"] == tradingsymbol and p["exchange"] == segment), 
-                            None
-                        )
-                    qty_held = existing_position["quantity"] if existing_position else 0
+                
+                if len(positions_data) > 100:  # Use DataFrame for larger datasets
+                    import pandas as pd
+                    if positions_df is None:  # Avoid recreating if already exists
+                        positions_df = pd.DataFrame(positions_data)
+                    matching_positions = positions_df[
+                        (positions_df['tradingsymbol'] == tradingsymbol) & 
+                        (positions_df['exchange'] == segment)
+                    ]
+                    existing_position = matching_positions.iloc[0].to_dict() if not matching_positions.empty else None
+                else:
+                    existing_position = next(
+                        (p for p in positions_data if p["tradingsymbol"] == tradingsymbol and p["exchange"] == segment), 
+                        None
+                    )
+                qty_positions = existing_position["quantity"] if existing_position else 0
+                if(qty_positions > 0):
+                    qty_held += qty_positions
                     
                 result = (qty_held, existing_position or {})
                 
