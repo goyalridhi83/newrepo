@@ -524,6 +524,7 @@ async def webhook(
 
     # Step 1: Read raw body
     try:
+        logging.info("Webhook hit at %s", datetime.now())
         raw_body = await payload.body()
         body_str = raw_body.decode('utf-8')
         log_with_request_id('INFO', "Raw webhook payload received", raw=body_str)

@@ -68,12 +68,21 @@ class LoggingManager:
             )
             file_handler.setFormatter(formatter)
             file_handler.setLevel(log_level)
+            # Force flush after every emit
+            def emit_and_flush(record, emit=file_handler.emit):
+                emit(record)
+                file_handler.flush()
+            file_handler.emit = emit_and_flush
             self._handlers.append(file_handler)
             
             # Console handler
             console_handler = logging.StreamHandler()
             console_handler.setFormatter(formatter)
             console_handler.setLevel(log_level)
+            def emit_and_flush_console(record, emit=console_handler.emit):
+                emit(record)
+                console_handler.flush()
+            console_handler.emit = emit_and_flush_console
             self._handlers.append(console_handler)
             
             # Configure root logger
